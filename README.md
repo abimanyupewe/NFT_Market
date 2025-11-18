@@ -2,6 +2,33 @@
 
 A Django-based NFT (Non-Fungible Token) Marketplace application.
 
+## Quick Start
+
+To quickly get started with the NFT Marketplace:
+
+```bash
+# Clone the repository
+git clone https://github.com/abimanyupewe/NFT_Market.git
+cd NFT_Market
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Create sample data (optional but recommended)
+python manage.py create_sample_data
+
+# Create superuser for admin access
+python manage.py createsuperuser
+
+# Run the development server
+python manage.py runserver
+```
+
+Visit http://127.0.0.1:8000/ to view the marketplace!
+
 ## Features
 
 - User authentication and profiles with wallet addresses
@@ -9,6 +36,7 @@ A Django-based NFT (Non-Fungible Token) Marketplace application.
 - Transaction history tracking
 - Admin interface for managing NFTs and transactions
 - Responsive web interface
+- Sample data generator for testing
 
 ## Models
 
@@ -53,17 +81,22 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-5. Create a superuser for admin access:
+6. Create a superuser for admin access:
 ```bash
 python manage.py createsuperuser
 ```
 
-6. Run the development server:
+7. (Optional) Create sample data for testing:
+```bash
+python manage.py create_sample_data
+```
+
+8. Run the development server:
 ```bash
 python manage.py runserver
 ```
 
-7. Access the application:
+9. Access the application:
 - Homepage: http://127.0.0.1:8000/
 - Admin interface: http://127.0.0.1:8000/admin/
 - NFT List: http://127.0.0.1:8000/nfts/
@@ -102,6 +135,17 @@ Through the admin panel:
 3. Fill in the details (title, description, price, owner, creator)
 4. Upload an image (optional)
 5. Set status to "listed" to display on the marketplace
+
+### Running Tests
+Run the test suite to ensure everything is working correctly:
+```bash
+python manage.py test
+```
+
+All 6 tests should pass, covering:
+- Model creation and validation
+- View functionality
+- Template rendering
 
 ## Technologies Used
 
