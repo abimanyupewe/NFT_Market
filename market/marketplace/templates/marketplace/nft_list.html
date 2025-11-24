@@ -1,0 +1,149 @@
+{% extends "marketplace/base.html" %} {% block title %}Explore NFTs - NFT
+Marketplace{% endblock %} {% block content %}
+<!-- Hero Section -->
+<div
+  class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 rounded-2xl mb-12"
+>
+  <div class="absolute inset-0 bg-black opacity-50"></div>
+  <div class="relative px-8 py-16 text-center">
+    <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
+      Explore
+      <span
+        class="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"
+        >NFTs</span
+      >
+    </h1>
+    <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+      Browse our collection of unique digital assets ready for purchase
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a
+        href="{% url 'marketplace:sold_nfts' %}"
+        class="border border-gray-400 text-gray-300 hover:text-white hover:border-white px-8 py-3 rounded-lg font-semibold transition-all duration-200"
+      >
+        View Sold NFTs
+      </a>
+    </div>
+  </div>
+  <!-- Decorative elements -->
+  <div
+    class="absolute top-0 left-0 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"
+  ></div>
+  <div
+    class="absolute top-0 right-0 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"
+  ></div>
+</div>
+
+<!-- NFT Grid -->
+{% if nfts %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+  {% for nft in nfts %}
+  <div
+    class="bg-gray-800 rounded-xl overflow-hidden hover:transform hover:scale-105 hover:shadow-2xl transition-all duration-300 border border-gray-700"
+  >
+    <div class="relative">
+      <div
+        class="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center"
+      >
+        {% if nft.image %}
+        <img
+          src="{{ nft.image.url }}"
+          alt="{{ nft.title }}"
+          class="w-full h-full object-cover"
+        />
+        {% else %}
+        <span class="text-6xl">🎨</span>
+        {% endif %}
+      </div>
+      <div class="absolute top-4 right-4">
+        <span
+          class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
+          >Available</span
+        >
+      </div>
+    </div>
+
+    <div class="p-6">
+      <h3 class="text-xl font-bold text-white mb-2">{{ nft.title }}</h3>
+
+      <div class="mb-4">
+        <div class="text-2xl font-bold text-blue-400 mb-2">
+          ${{ nft.price }}
+        </div>
+        <div class="text-sm text-gray-400">Owner: {{ nft.owner.username }}</div>
+      </div>
+
+      <a
+        href="{% url 'marketplace:nft_detail' nft.pk %}"
+        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 block text-center"
+      >
+        View Details
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="flex justify-center items-center space-x-4 mt-8">
+  {% if page_obj.has_previous %}
+  <a
+    href="?page=1"
+    class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-600"
+  >
+    &laquo; First
+  </a>
+  <a
+    href="?page={{ page_obj.previous_page_number }}"
+    class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-600"
+  >
+    Previous
+  </a>
+  {% endif %}
+
+  <div class="flex items-center space-x-2">
+    <span
+      class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold"
+    >
+      {{ page_obj.number }}
+    </span>
+    <span class="text-gray-400">of</span>
+    <span
+      class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg border border-gray-600"
+    >
+      {{ page_obj.paginator.num_pages }}
+    </span>
+  </div>
+
+  {% if page_obj.has_next %}
+  <a
+    href="?page={{ page_obj.next_page_number }}"
+    class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-600"
+  >
+    Next
+  </a>
+  <a
+    href="?page={{ page_obj.paginator.num_pages }}"
+    class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-600"
+  >
+    Last &raquo;
+  </a>
+  {% endif %}
+</div>
+{% endif %} {% else %}
+<!-- Empty State -->
+<div class="text-center py-16 bg-gray-800 rounded-xl border border-gray-700">
+  <div class="text-6xl mb-4">🎨</div>
+  <h3 class="text-xl font-semibold text-gray-300 mb-2">No NFTs Available</h3>
+  <p class="text-gray-500 mb-6">
+    Check back soon for amazing digital collectibles!
+  </p>
+  <a
+    href="{% url 'marketplace:home' %}"
+    class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
+  >
+    Go Home
+  </a>
+</div>
+{% endif %} {% endblock %}

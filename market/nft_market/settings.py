@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,7 +39,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'marketplace',
+    'rest_framework',
 ]
+
+UNFOLD = {
+    "SITE_TITLE": "Admin Market NFT",
+    "SITE_HEADER": "Admin Market NFT",
+    "SITE_URL": "/admin/",
+    "LOGIN": {
+        "SHOW_FORGOT_PASSWORD": False,
+        "username_placeholder": "Username",
+        "password_placeholder": "Password",
+    },
+    "THEME": "auto",  # "dark" / "light" / "auto"
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

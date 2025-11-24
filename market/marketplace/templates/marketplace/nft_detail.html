@@ -1,0 +1,233 @@
+{% extends "marketplace/base.html" %} {% block title %}{{ nft.title }} - NFT
+Marketplace{% endblock %} {% block extra_css %}
+<style>
+  .nft-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+  .nft-image-large {
+    width: 100%;
+    height: 500px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 5rem;
+  }
+  .nft-details {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .nft-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  .nft-price {
+    font-size: 2rem;
+    color: #667eea;
+    font-weight: bold;
+    margin-bottom: 2rem;
+  }
+  .nft-description {
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 2rem;
+  }
+  .nft-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .meta-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+  }
+  .meta-label {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .meta-value {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 500;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .status-listed {
+    background: #d4edda;
+    color: #155724;
+  }
+  .status-sold {
+    background: #f8d7da;
+    color: #721c24;
+  }
+  .status-draft {
+    background: #fff3cd;
+    color: #856404;
+  }
+  .btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #764ba2;
+  }
+  .transactions-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+  .transaction-item {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .transaction-item:last-child {
+    border-bottom: none;
+  }
+  .transaction-type {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+  .type-mint {
+    background: #cfe2ff;
+    color: #084298;
+  }
+  .type-sale {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+  .type-transfer {
+    background: #fff3cd;
+    color: #664d03;
+  }
+  @media (max-width: 768px) {
+    .nft-detail {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="nft-detail">
+  <div>
+    <div class="nft-image-large">
+      {% if nft.image %}
+      <img
+        src="{{ nft.image.url }}"
+        alt="{{ nft.title }}"
+        style="
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 10px;
+        "
+      />
+      {% else %} 🎨 {% endif %}
+    </div>
+  </div>
+
+  <div class="nft-details">
+    <h1 class="nft-title">{{ nft.title }}</h1>
+    <div class="nft-price">${{ nft.price }}</div>
+
+    <p class="nft-description">{{ nft.description }}</p>
+
+    <div class="nft-meta">
+      <div class="meta-item">
+        <div class="meta-label">Owner</div>
+        <div class="meta-value">{{ nft.owner.username }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Creator</div>
+        <div class="meta-value">{{ nft.creator.username }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Status</div>
+        <div class="meta-value">
+          <span class="status-badge status-{{ nft.status }}"
+            >{{ nft.get_status_display }}</span
+          >
+        </div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Created</div>
+        <div class="meta-value">{{ nft.created_at|date:"M d, Y" }}</div>
+      </div>
+    </div>
+
+    {% if nft.token_id %}
+    <div class="meta-item" style="margin-bottom: 2rem">
+      <div class="meta-label">Token ID</div>
+      <div class="meta-value" style="font-size: 0.9rem">{{ nft.token_id }}</div>
+    </div>
+    {% endif %} {% if nft.status == 'listed' %}
+    <a href="{% url 'marketplace:buy_nft' nft.id %}" class="btn">Buy Now</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="transactions-section">
+  <h2 class="section-title">Transaction History</h2>
+  {% if transactions %} {% for transaction in transactions %}
+  <div class="transaction-item">
+    <div>
+      <strong>{{ transaction.get_transaction_type_display }}</strong>
+      <span class="transaction-type type-{{ transaction.transaction_type }}">
+        {{ transaction.transaction_type }}
+      </span>
+      <br />
+      <small>
+        {% if transaction.from_user %} From: {{ transaction.from_user.username
+        }} {% endif %} {% if transaction.to_user %} To: {{
+        transaction.to_user.username }} {% endif %}
+      </small>
+      <br />
+      <small>{{ transaction.created_at|date:"M d, Y H:i" }}</small>
+    </div>
+    <div>
+      {% if transaction.price %}
+      <strong>${{ transaction.price }}</strong>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %} {% else %}
+  <p style="text-align: center; color: #666">No transaction history yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
