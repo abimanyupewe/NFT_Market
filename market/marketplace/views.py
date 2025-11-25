@@ -6,6 +6,8 @@ from .models import NFT, Transaction, UserProfile, CreatorProfile
 from .form import PurchaseForm, OfferForm, NFTForm, UserProfileForm, CreatorProfileForm
 from .serializers import NFTSerializer, TransactionSerializer, UserProfileSerializer, CreatorProfileSerializer
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 def home(request):
@@ -182,18 +184,35 @@ class SoldNFTListView(ListView):
 class NFTViewSet(viewsets.ModelViewSet):
     queryset = NFT.objects.all()
     serializer_class = NFTSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title', 'description', 'creator__username', 'owner__username']
+    ordering_fields = ['title', 'created_at', 'price']
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['nft__title', 'from_user__username', 'to_user__username', 'transaction_type', 'transaction_status']
+    ordering_fields = ['nft__title', 'created_at', 'price', 'transaction_status']
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['user__username', 'bio']
+    ordering_fields = ['user__username', 'created_at']
     
 class CreatorProfileViewSet(viewsets.ModelViewSet):
     queryset = CreatorProfile.objects.all()
     serializer_class = CreatorProfileSerializer
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['user__username', 'bio']
+    ordering_fields = ['user__username', 'created_at']
 
 def infografis(request):
     total_assets = NFT.objects.count()
