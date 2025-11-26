@@ -8,141 +8,202 @@ const Auctions = () => {
   const [filter, setFilter] = useState<"all" | "live" | "ending">("all");
 
   if (!context) {
-    return <div>Error: Context not found</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-[#020617] text-white">
+        Error: Context not found
+      </div>
+    );
   }
 
   const { nfts, loading, error } = context;
 
+  // Filter NFTs for auctions (listed status)
+  const auctionNFTs = nfts.filter((nft) => nft.status === "listed");
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 p-8">
+      <div className="text-center text-red-500 p-8 min-h-screen bg-[#020617]">
         <p className="text-xl">Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Live Auctions</h1>
-        <p className="text-gray-600 mb-6">
-          Bid on exclusive NFTs and own unique digital assets
-        </p>
-
-        {/* Filter Buttons */}
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-              filter === "all"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            All Auctions
-          </button>
-          <button
-            onClick={() => setFilter("live")}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-              filter === "live"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Live Now
-          </button>
-          <button
-            onClick={() => setFilter("ending")}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-              filter === "ending"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Ending Soon
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 opacity-10 -z-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {nfts.map((nft) => (
-          <div
-            key={nft.pk}
-            className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          >
-            <div
-              onClick={() => navigate(`/nft/${nft.pk}`)}
-              className="relative pb-[100%] bg-gray-200"
+      <div className="container mx-auto px-4">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-4 text-white">Live Auctions</h1>
+          <p className="text-gray-400 mb-6">
+            Bid on {auctionNFTs.length} exclusive NFTs and own unique digital
+            assets
+          </p>
+
+          {/* Filter Buttons */}
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                filter === "all"
+                  ? "bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white"
+                  : "bg-white/10 text-gray-300 hover:bg-white/20"
+              }`}
             >
-              <img
-                src={
-                  typeof nft.image === "string" &&
-                  (nft.image as string).startsWith("http")
-                    ? nft.image
-                    : `http://127.0.0.1:8000${nft.image}`
-                }
-                alt={nft.title}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                LIVE
-              </div>
-            </div>
-
-            <div className="p-4">
-              <h3
-                onClick={() => navigate(`/nft/${nft.pk}`)}
-                className="text-lg font-semibold mb-2 truncate cursor-pointer hover:text-blue-600"
-              >
-                {nft.title}
-              </h3>
-
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600">Owner:</span>
-                <span className="text-sm font-medium">
-                  {nft.owner?.username || "Unknown Owner"}
-                </span>
-              </div>
-
-              <div className="mb-3">
-                <p className="text-xs text-gray-500">Current Bid</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {nft.price} ETH
-                </p>
-              </div>
-
-              <div className="mb-3 text-sm text-gray-600">
-                <p>Ends in: 2h 45m</p>
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/nft/${nft.pk}`);
-                }}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200"
-              >
-                Place Bid
-              </button>
-            </div>
+              All Auctions
+            </button>
+            <button
+              onClick={() => setFilter("live")}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                filter === "live"
+                  ? "bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white"
+                  : "bg-white/10 text-gray-300 hover:bg-white/20"
+              }`}
+            >
+              Live Now
+            </button>
+            <button
+              onClick={() => setFilter("ending")}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                filter === "ending"
+                  ? "bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white"
+                  : "bg-white/10 text-gray-300 hover:bg-white/20"
+              }`}
+            >
+              Ending Soon
+            </button>
           </div>
-        ))}
-      </div>
-
-      {nfts.length === 0 && !loading && (
-        <div className="text-center text-gray-500 py-20">
-          <p className="text-2xl mb-2">No Auctions Available</p>
-          <p className="text-gray-400">Check back later for new auctions</p>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {auctionNFTs.map((nft) => (
+            <div
+              key={nft.id}
+              onClick={() => navigate(`/nft/${nft.id}`)}
+              className="group relative bg-[#0f172a]/30 backdrop-blur-sm rounded-2xl overflow-hidden hover:transform hover:shadow-2xl transition-all duration-300 border border-[#1e293b]/50 hover:border-[#FC1E5C] cursor-pointer"
+            >
+              {/* Glassmorphism overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={nft.image}
+                    alt={nft.title}
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                  />
+                </div>
+
+                {/* LIVE badge */}
+                <div className="absolute top-3 right-3">
+                  <span className="px-3 py-1 rounded-lg text-xs font-bold backdrop-blur-md bg-red-500/90 text-white animate-pulse">
+                    🔥 LIVE
+                  </span>
+                </div>
+
+                {/* Price badge */}
+                <div className="absolute top-3 left-3">
+                  <span className="px-3 py-1 rounded-lg text-xs font-bold backdrop-blur-md bg-green-500/90 text-white">
+                    {nft.price} ETH
+                  </span>
+                </div>
+
+                {/* Avatar & Username */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FC1E5C] to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                    {nft.creator.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-white text-sm font-semibold backdrop-blur-md bg-black/30 px-2 py-1 rounded-lg">
+                    @{nft.creator.username}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 relative z-10">
+                <h3 className="text-lg font-bold text-white mb-2 truncate">
+                  {nft.title}
+                </h3>
+
+                {/* Auction timer */}
+                <div className="text-xs text-gray-400 mb-3 flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Ends in 2h 34m
+                </div>
+
+                {/* Action buttons row */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/transaction/${nft.id}`);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white py-2 px-3 rounded-lg text-sm font-bold transition-all duration-200"
+                  >
+                    Place Bid
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/nft/${nft.id}`);
+                    }}
+                    className="w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center transition-all"
+                  >
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {auctionNFTs.length === 0 && !loading && (
+          <div className="text-center py-16 bg-[#0f172a]/30 backdrop-blur-sm rounded-xl border border-[#1e293b]/50">
+            <div className="text-6xl mb-4">⚡</div>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">
+              No Active Auctions
+            </h3>
+            <p className="text-gray-500">
+              Check back later for exciting auction opportunities
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

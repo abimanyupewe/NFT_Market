@@ -68,7 +68,7 @@ class NFT(models.Model):
         User, 
         on_delete=models.CASCADE, 
         blank=True, 
-        null=True,  # ✅ HARUS null=True, BUKAN default="No Owner"
+        null=True, 
         related_name='owned_nfts'
     )
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_nfts')

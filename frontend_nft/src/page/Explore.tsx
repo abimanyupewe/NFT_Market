@@ -12,101 +12,125 @@ const Explore = () => {
 
   const { nfts, loading, error } = context;
 
-  // Filter NFT yang belum ada ownernya dan status listed
   const availableNFTs = nfts.filter(
     (nft) => nft.owner === null && nft.status === "listed"
   );
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 p-8">
+      <div className="text-center text-red-500 p-8 min-h-screen bg-[#020617]">
         <p className="text-xl">Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Explore NFTs</h1>
-        <p className="text-gray-600">
-          Discover {availableNFTs.length} unique NFTs available for purchase
-        </p>
+    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 opacity-10 -z-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {availableNFTs.map((nft) => (
-          <div
-            key={nft.id}
-            className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          >
-            <div
-              onClick={() => navigate(`/nft/${nft.id}`)}
-              className="relative pb-[100%] bg-gray-200"
-            >
-              <img
-                src={nft.image}
-                alt={nft.title}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                AVAILABLE
-              </div>
-            </div>
-
-            <div className="p-4">
-              <h3
-                onClick={() => navigate(`/nft/${nft.id}`)}
-                className="text-lg font-semibold mb-2 truncate cursor-pointer hover:text-blue-600"
-              >
-                {nft.title}
-              </h3>
-
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600">Creator:</span>
-                <span className="text-sm font-medium text-green-600">
-                  {nft.creator.username}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t">
-                <div>
-                  <p className="text-xs text-gray-500">Price</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {nft.price} ETH
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/transaction/${nft.id}`);
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200"
-                >
-                  Buy Now
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {availableNFTs.length === 0 && !loading && (
-        <div className="text-center text-gray-500 py-20">
-          <p className="text-2xl mb-2">No NFTs Available</p>
+      <div className="container mx-auto px-4">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 text-white">Explore NFTs</h1>
           <p className="text-gray-400">
-            All NFTs have been sold. Check back later for new listings
+            Discover {availableNFTs.length} unique NFTs available for purchase
           </p>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {availableNFTs.map((nft) => (
+            <div
+              key={nft.id || nft.pk}
+              onClick={() => navigate(`/nft/${nft.id}`)}
+              className="group relative bg-[#0f172a]/30 backdrop-blur-sm rounded-xl overflow-hidden hover:transform hover:shadow-2xl transition-all duration-300 border border-[#1e293b]/50 hover:border-[#FC1E5C]/30 cursor-pointer"
+            >
+              {/* Glassmorphism overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center overflow-hidden">
+                  {nft.image ? (
+                    <img
+                      src={nft.image}
+                      alt={nft.title}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                      onError={(e) => {
+                        console.error(
+                          "Image failed to load:",
+                          e.currentTarget.src
+                        );
+                      }}
+                    />
+                  ) : (
+                    <span className="text-6xl">🎨</span>
+                  )}
+                </div>
+                <div className="absolute top-2 right-2">
+                  <span
+                    className={`px-3 py-1 rounded-sm text-xs font-semibold backdrop-blur-md ${
+                      nft.status === "listed"
+                        ? "bg-green-500/80 text-white"
+                        : "bg-gray-500/80 text-white"
+                    }`}
+                  >
+                    {nft.status === "listed" ? "Listed" : "Sold"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-6 relative z-10">
+                <div className="flex justify-between">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {nft.title}
+                  </h3>
+                  <div className="text-sm text-gray-400">
+                    {nft.owner
+                      ? `Owner: ${nft.owner.username}`
+                      : `By: ${nft.creator.username}`}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-sm font-semibold text-[#FC1E5C]">
+                    {nft.price} ETH
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/nft/${nft.id}`);
+                    }}
+                    className=" bg-primary text-white py-2 px-4 font-semibold transition-all duration-200 transform hover:scale-105"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {availableNFTs.length === 0 && !loading && (
+          <div className="text-center py-16 bg-[#0f172a]/30 backdrop-blur-sm rounded-xl border border-[#1e293b]/50">
+            <div className="text-6xl mb-4">🎨</div>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">
+              No NFTs Available
+            </h3>
+            <p className="text-gray-500">
+              All NFTs have been sold. Check back later for new listings
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

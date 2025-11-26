@@ -55,7 +55,7 @@ export const HeroSection = () => {
                 </a>
                 <a
                   href="#"
-                  className="border border-gray-400 text-gray-300 hover:text-white hover:border-white px-8 py-3 font-semibold transition-all duration-200"
+                  className="border border-gray-400 text-gray-300 hover:text-white hover:border-white px-8 py-3 font-semibold transition-all duration-700"
                 >
                   Sell Your NFT's
                 </a>

@@ -61,7 +61,7 @@ export const NavbarSection = () => {
               </NavbarButton>
             </Link>
             <Link to="/connect-wallet">
-              <NavbarButton variant="primary" className="bg-primary text-white">
+              <NavbarButton variant="primary" className="bg-primary text-white rounded-full">
                 Connect Wallet
               </NavbarButton>
             </Link>

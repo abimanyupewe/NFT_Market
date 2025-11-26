@@ -1,13 +1,12 @@
 export const Footer = () => {
   return (
-    <footer className="bg-gray-800 border-t border-gray-700 mt-16">
+    <footer className="bg-[#0f172a] border-t border-[#1e293b] mt-16">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <span className="text-2xl">🎨</span>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-[#FC1E5C]  to-indigo-500 bg-clip-text text-transparent">
                 NFT Marketplace
               </span>
             </div>
@@ -18,7 +17,7 @@ export const Footer = () => {
             <div className="flex space-x-4">
               <a
                 href="#"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
               >
                 <svg
                   className="w-6 h-6"
@@ -30,7 +29,7 @@ export const Footer = () => {
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
+                className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
               >
                 <svg
                   className="w-6 h-6"
@@ -42,7 +41,7 @@ export const Footer = () => {
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-pink-400 transition-colors"
+                className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
               >
                 <svg
                   className="w-6 h-6"
@@ -61,16 +60,16 @@ export const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="{% url 'marketplace:home' %}"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  href="/"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Home
                 </a>
               </li>
               <li>
                 <a
-                  href="{% url 'marketplace:nft_list' %}"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  href="/explore"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Explore
                 </a>
@@ -78,7 +77,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Create
                 </a>
@@ -86,7 +85,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   About
                 </a>
@@ -101,7 +100,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Help Center
                 </a>
@@ -109,7 +108,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Community
                 </a>
@@ -117,7 +116,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Contact Us
                 </a>
@@ -125,7 +124,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
                   Terms of Service
                 </a>
@@ -134,21 +133,21 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div className="border-t border-[#1e293b] mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
             &copy; 2024 NFT Marketplace. All rights reserved.
           </p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <a
               href="#"
-              className="text-gray-400 hover:text-white text-sm transition-colors"
+              className="text-gray-400 hover:text-[#FC1E5C] text-sm transition-colors"
             >
               Privacy Policy
             </a>
-            <span className="text-gray-600">•</span>
+            <span className="text-[#1e293b]">•</span>
             <a
               href="#"
-              className="text-gray-400 hover:text-white text-sm transition-colors"
+              className="text-gray-400 hover:text-[#FC1E5C] text-sm transition-colors"
             >
               Cookie Policy
             </a>

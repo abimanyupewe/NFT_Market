@@ -27,7 +27,7 @@ interface Creator {
   pk: number;
   user: { username: string };
   bio: string;
-  profile_image: { url: string };
+  profile_image: string;
 }
 
 interface AppContextType {
@@ -82,17 +82,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     try {
       const res = await fetch(`${backendUrl}api/creator-profiles/`);
+
+      console.log("Creator API Response Status:", res.status); // Debug
+
       if (res.ok) {
         const data = await res.json();
-        setCreators(data.results);
-        console.log("Creators from backend:", data);
+        console.log("Raw Creators Data:", data); // Debug
+        const creatorsArray = data.results || data || [];
+
+        console.log("Processed Creators Array:", creatorsArray); // Debug
+
+        setCreators(creatorsArray);
         toast.success("Creators loaded successfully");
       } else {
+        console.error("Failed to fetch creators, status:", res.status);
         toast.error("Failed to fetch creators");
+        setCreators([]);
       }
     } catch (err: unknown) {
-      console.log(err);
+      console.error("Creator fetch error:", err);
       toast.error("An error occurred while fetching creators");
+      setCreators([]);
     } finally {
       setLoading(false);
     }

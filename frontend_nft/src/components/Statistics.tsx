@@ -18,67 +18,99 @@ const Statistics = () => {
 
   useEffect(() => {
     const fetchStatistics = async () => {
+      setLoading(true);
       const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+        import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
 
       try {
-        const response = await fetch(`${backendUrl}/infografis/`);
+        // Fetch statistics from API
+        const response = await fetch(
+          `${backendUrl}api/creator-profiles/statistics/`
+        );
+
         if (response.ok) {
           const data = await response.json();
+          console.log("Statistics from API:", data);
 
-          // Calculate total volume from context
+          // Calculate total volume from NFTs
           const totalVolume =
             context?.nfts.reduce(
-              (sum, nft) => sum + parseFloat(nft.price),
+              (sum, nft) => sum + parseFloat(nft.price || "0"),
               0
             ) || 0;
 
           setStatistics({
-            total_assets: data.total_assets,
-            total_creators: data.total_creators,
+            total_assets: data.total_created || context?.nfts.length || 0,
+            total_creators:
+              data.total_creators || context?.creators.length || 0,
+            total_volume: totalVolume,
+          });
+        } else {
+          // Fallback to context data if API fails
+          console.warn("Failed to fetch statistics, using context data");
+
+          const totalVolume =
+            context?.nfts.reduce(
+              (sum, nft) => sum + parseFloat(nft.price || "0"),
+              0
+            ) || 0;
+
+          setStatistics({
+            total_assets: context?.nfts.length || 0,
+            total_creators: context?.creators.length || 0,
             total_volume: totalVolume,
           });
         }
       } catch (error) {
         console.error("Failed to fetch statistics:", error);
+
+        // Fallback to context data
+        const totalVolume =
+          context?.nfts.reduce(
+            (sum, nft) => sum + parseFloat(nft.price || "0"),
+            0
+          ) || 0;
+
+        setStatistics({
+          total_assets: context?.nfts.length || 0,
+          total_creators: context?.creators.length || 0,
+          total_volume: totalVolume,
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStatistics();
-  }, [context?.nfts]);
+    if (context && !context.loading) {
+      fetchStatistics();
+    }
+  }, [context?.nfts, context?.creators, context?.loading]);
 
   const stats = [
     {
-      icon: "🎨",
       label: "Total NFTs",
       value: statistics.total_assets.toLocaleString(),
-      color: "from-blue-500 to-cyan-500",
       description: "Unique digital assets",
     },
     {
-      icon: "👥",
       label: "Total Creators",
       value: statistics.total_creators.toLocaleString(),
-      color: "from-purple-500 to-pink-500",
       description: "Active creators",
     },
     {
-      icon: "💰",
       label: "Total Volume",
       value: `${statistics.total_volume.toFixed(2)} ETH`,
-      color: "from-green-500 to-emerald-500",
       description: "Trading volume",
     },
   ];
 
-  if (loading) {
+  if (loading || context?.loading) {
     return (
       <div className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading statistics...</p>
           </div>
         </div>
       </div>
@@ -86,33 +118,20 @@ const Statistics = () => {
   }
 
   return (
-    <div className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Marketplace Statistics
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
-            >
-              <div
-                className={`text-5xl mb-4 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
-              >
-                {stat.icon}
-              </div>
-              <h3 className="text-4xl font-bold mb-2 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent">
-                {stat.value}
-              </h3>
-              <p className="text-gray-900 font-semibold text-lg mb-1">
-                {stat.label}
-              </p>
-              <p className="text-gray-500 text-sm">{stat.description}</p>
-            </div>
-          ))}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-white">
+      {stats.map((stat, index) => (
+        <div
+          key={index}
+        >
+          <h3 className={`text-4xl text-primary font-bold mb-2`}>
+            {stat.value}
+          </h3>
+          <p className="font-semibold text-lg mb-1">
+            {stat.label}
+          </p>
+          <p className="text-sm">{stat.description}</p>
         </div>
-      </div>
+      ))}
     </div>
   );
 };

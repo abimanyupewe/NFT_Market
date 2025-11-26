@@ -5,71 +5,129 @@ const Creator = () => {
   const context = useContext(AppContext);
 
   if (!context) {
-    return <div>Error: Context not found</div>;
+    return <div className="text-white">Error: Context not found</div>;
   }
 
-  const { creators, loading, error } = context;
+  const { creators = [], loading, error } = context; // Add default empty array
+
+  console.log("Creators data:", creators); // Debug log
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 p-4">
+      <div className="text-center text-red-400 p-4">
         <p>Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-8 text-center">Top Creators</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {creators.map((creator) => (
-          <div
-            key={creator.pk}
-            className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-          >
-            <div className="p-6">
-              <div className="flex flex-col items-center">
-                <img
-                  src={
-                    typeof creator.profile_image === "string" &&
-                    (creator.profile_image as string).startsWith("http")
-                      ? creator.profile_image
-                      : `http://127.0.0.1:8000${creator.profile_image}`
-                  }
-                  alt={creator.user.username}
-                  className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-blue-500"
-                />
-                <h3 className="text-xl font-semibold mb-2">
-                  {creator.user.username}
-                </h3>
-                <p className="text-gray-600 text-sm text-center line-clamp-3">
-                  {creator.bio || "No bio available"}
-                </p>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-4">
-              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200">
-                View Profile
-              </button>
-            </div>
+    <div className="w-full bg-[#020617] py-16 text-white">
+      <div className="">
+        {/* Header Section */}
+        <div className="mb-10 flex flex-col items-start md:items-center md:flex-row justify-between">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Top Creators
+            </h2>
+            <p className="text-gray-400">
+              Checkout Top Rated Creators on the NFT Marketplace
+            </p>
           </div>
-        ))}
-      </div>
-
-      {creators.length === 0 && !loading && (
-        <div className="text-center text-gray-500 py-12">
-          <p className="text-xl">No creators found</p>
         </div>
-      )}
+
+        <div className="flex gap-4 overflow-x-auto">
+          {Array.isArray(creators) && creators.length > 0 ? (
+            creators.map((creator) => (
+              <div
+                key={creator.pk}
+                className="group relative flex items-center justify-between rounded-2xl p-4 border border-gray-800 bg-gray-900/40 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 cursor-pointer min-w-[300px]"
+              >
+                <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                  <div className="relative shrink-0">
+                    <img
+                      src={
+                        creator.profile_image?.startsWith("http")
+                          ? creator.profile_image
+                          : `http://127.0.0.1:8000${
+                              creator.profile_image ||
+                              "/media/default-avatar.png"
+                            }`
+                      }
+                      alt={creator.user.username}
+                      className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-gray-700 group-hover:border-primary transition-colors"
+                      onError={(e) => {
+                        // Fallback jika gambar gagal load
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/64?text=" +
+                          creator.user.username.charAt(0);
+                      }}
+                    />
+                    {/* Verified Badge (Hiasan) */}
+                    <div className="absolute -bottom-1 -right-1 bg-green-600 rounded-full p-1 border-2 border-[#020617]">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* 3. Text Info */}
+                  <div className="flex flex-col min-w-0">
+                    <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-primary transition-colors truncate">
+                      {creator.user.username}
+                    </h3>
+                    <p className="text-sm text-gray-400 truncate max-w-[200px] md:max-w-md">
+                      {creator.bio || "Digital Artist & Collector"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bagian Kanan: Indikator Arrow (Pengganti Button) */}
+                <div className="pl-4">
+                  <div className="p-2 rounded-full bg-gray-800 group-hover:bg-primary group-hover:text-white text-gray-400 transition-all duration-300 transform group-hover:-translate-y-1 group-hover:translate-x-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 py-20 border border-dashed border-gray-800 rounded-2xl mt-8 w-full">
+              <p className="text-xl">No creators found</p>
+              <p className="text-sm mt-2">Check console for data</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
