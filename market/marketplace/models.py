@@ -64,7 +64,13 @@ class NFT(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     image = models.ImageField(upload_to='nfts/')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, default="No Owner", related_name='owned_nfts')
+    owner = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        blank=True, 
+        null=True,  # ✅ HARUS null=True, BUKAN default="No Owner"
+        related_name='owned_nfts'
+    )
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_nfts')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')

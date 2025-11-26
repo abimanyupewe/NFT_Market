@@ -64,7 +64,7 @@ class CreatorProfileForm(forms.ModelForm):
 class NFTForm(forms.ModelForm):
     class Meta:
         model = NFT
-        fields = ['title', 'description', 'image', 'price']
+        fields = ['title', 'description', 'image', 'price', 'status', 'token_id', 'contract_address']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -81,17 +81,40 @@ class NFTForm(forms.ModelForm):
             }),
             'price': forms.NumberInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Enter price in USD',
+                'placeholder': 'Enter price in ETH',
                 'step': '0.01',
                 'min': '0.01'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-input',
+            }),
+            'token_id': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Token ID (auto-generated if empty)'
+            }),
+            'contract_address': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Contract Address (optional)'
             })
         }
         labels = {
             'title': 'NFT Title',
             'description': 'Description',
             'image': 'NFT Image',
-            'price': 'Price (USD)'
+            'price': 'Price (ETH)',
+            'status': 'Status',
+            'token_id': 'Token ID',
+            'contract_address': 'Contract Address'
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make token_id and contract_address optional
+        self.fields['token_id'].required = False
+        self.fields['contract_address'].required = False
+        # Set default status to 'listed'
+        if not self.instance.pk:
+            self.initial['status'] = 'listed'
 
 class PurchaseForm(forms.Form):
     wallet_address = forms.CharField(

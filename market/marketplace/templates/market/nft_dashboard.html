@@ -1,0 +1,401 @@
+{% extends 'market/base.html' %} {% load crispy_forms_tags %} {% block title
+%}NFT Management{% endblock %} {% block page_title %}NFT Management{% endblock%}
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">NFTs</h3>
+    <button
+      onclick="openAddModal()"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+    >
+      <i class="fas fa-plus mr-2"></i>Add NFT
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div
+      class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm opacity-90">Total Assets</p>
+          <p class="text-3xl font-bold" id="totalAssets">0</p>
+        </div>
+        <div class="bg-white bg-opacity-20 rounded-full p-3">
+          <i class="fas fa-images text-2xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm opacity-90">Listed NFTs</p>
+          <p class="text-3xl font-bold" id="listedCount">0</p>
+        </div>
+        <div class="bg-white bg-opacity-20 rounded-full p-3">
+          <i class="fas fa-tag text-2xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm opacity-90">Sold NFTs</p>
+          <p class="text-3xl font-bold" id="soldCount">0</p>
+        </div>
+        <div class="bg-white bg-opacity-20 rounded-full p-3">
+          <i class="fas fa-check-circle text-2xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            ID
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            Photo
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            Title
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            Creator
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            Price
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+          >
+            Status
+          </th>
+          <th
+            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody id="nftTableBody" class="bg-white divide-y divide-gray-200">
+        <tr>
+          <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            Loading...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div
+  id="nftModal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div
+    class="bg-white rounded-lg p-8 w-full max-w-md max-h-screen overflow-y-auto"
+  >
+    <h3 class="text-xl font-bold mb-4" id="modalTitle">Add NFT</h3>
+    <form id="nftForm" onsubmit="handleSubmit(event)">
+      {% csrf_token %}
+      <div id="formContent">{{ nft_form|crispy }}</div>
+      <div class="flex gap-2 mt-4">
+        <button
+          type="submit"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          onclick="closeModal()"
+          class="flex-1 bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_URL = "http://127.0.0.1:8000/api/nfts/";
+  const TOKEN = "ba86004d902cac52e3c73b3bf8c80cd6c1d9e260";
+  let currentNFTId = null;
+  let allNFTs = [];
+
+  // Load NFTs
+  async function loadNFTs() {
+    try {
+      const res = await fetch(API_URL, {
+        headers: { Authorization: `Token ${TOKEN}` },
+      });
+      const data = await res.json();
+      allNFTs = data.results || data;
+
+      // Update stats
+      updateStats();
+
+      // Render table
+      renderTable(allNFTs);
+    } catch (err) {
+      console.error("Error loading NFTs:", err);
+      document.getElementById("nftTableBody").innerHTML =
+        '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Failed to load NFTs</td></tr>';
+    }
+  }
+
+  // Update Statistics
+  function updateStats() {
+    const totalAssets = allNFTs.length;
+    const listedNFTs = allNFTs.filter((nft) => nft.status === "listed").length;
+    const soldNFTs = allNFTs.filter((nft) => nft.status === "sold").length;
+
+    document.getElementById("totalAssets").textContent = totalAssets;
+    document.getElementById("listedCount").textContent = listedNFTs;
+    document.getElementById("soldCount").textContent = soldNFTs;
+  }
+
+  // Render Table
+  function renderTable(nfts) {
+    const tbody = document.getElementById("nftTableBody");
+    if (nfts.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No NFTs found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = nfts
+      .map(
+        (nft) => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-500">#${nft.id}</td>
+            <td class="px-6 py-4">
+                <img src="${nft.image}" alt="${
+          nft.title
+        }" class="h-12 w-12 object-cover rounded-lg"/>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">${
+              nft.title
+            }</td>
+            <td class="px-6 py-4 text-sm text-gray-900">${
+              nft.creator.username
+            }</td>
+            <td class="px-6 py-4 text-sm font-bold text-green-600">${
+              nft.price
+            } ETH</td>
+            <td class="px-6 py-4 text-sm">
+                <span class="px-2 py-1 text-xs rounded-full font-semibold ${
+                  nft.status === "listed"
+                    ? "bg-green-100 text-green-800"
+                    : nft.status === "sold"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-gray-100 text-gray-800"
+                }">
+                    ${nft.status.toUpperCase()}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+                <button onclick="editNFT(${
+                  nft.id
+                })" class="text-yellow-600 hover:text-yellow-800 mx-1" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteNFT(${nft.id}, '${
+          nft.title
+        }')" class="text-red-600 hover:text-red-800 mx-1" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `
+      )
+      .join("");
+  }
+
+  // Open Add Modal
+  function openAddModal() {
+    currentNFTId = null;
+    document.getElementById("modalTitle").textContent = "Add NFT";
+    document.getElementById("nftForm").reset();
+    document.getElementById("nftModal").classList.remove("hidden");
+  }
+
+  // Open Edit Modal
+  async function editNFT(id) {
+    try {
+      const res = await fetch(`${API_URL}${id}/`, {
+        headers: { Authorization: `Token ${TOKEN}` },
+      });
+      const nft = await res.json();
+      currentNFTId = id;
+      document.getElementById("modalTitle").textContent = "Edit NFT";
+
+      // Helper function agar aman jika element tidak ditemukan
+      const setValue = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || "";
+      };
+
+      setValue("id_title", nft.title);
+      setValue("id_description", nft.description);
+      setValue("id_price", nft.price);
+      setValue("id_status", nft.status);
+      setValue("id_token_id", nft.token_id);
+      setValue("id_contract_address", nft.contract_address);
+
+      // Untuk input file (image), kita tidak bisa men-set value secara programmatically karena alasan keamanan browser.
+      // Jadi biarkan kosong, user akan upload ulang hanya jika ingin mengganti.
+
+      document.getElementById("nftModal").classList.remove("hidden");
+    } catch (err) {
+      console.error("Error loading NFT:", err);
+      alert("Failed to load NFT");
+    }
+  }
+
+  // Handle Submit - PERBAIKAN
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+
+    // Ambil nilai dari input yang di-generate oleh crispy forms
+    const title = document.getElementById("id_title")?.value;
+    const description = document.getElementById("id_description")?.value;
+    const price = document.getElementById("id_price")?.value;
+    const status = document.getElementById("id_status")?.value;
+
+    // Validasi required fields
+    if (!title || !description || !price) {
+      alert("Please fill in all required fields (Title, Description, Price)");
+      return;
+    }
+
+    // Append data ke FormData
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("price", price);
+    formData.append("status", status || "listed");
+
+    // Optional fields - hanya kirim jika ada nilai
+    const tokenId = document.getElementById("id_token_id")?.value;
+    const contractAddr = document.getElementById("id_contract_address")?.value;
+
+    if (tokenId) formData.append("token_id", tokenId);
+    if (contractAddr) formData.append("contract_address", contractAddr);
+
+    // Image file - WAJIB untuk create, optional untuk update
+    const imageInput = document.getElementById("id_image");
+    if (imageInput && imageInput.files && imageInput.files.length > 0) {
+      formData.append("image", imageInput.files[0]);
+    } else if (!currentNFTId) {
+      // Jika create NFT baru, image wajib
+      alert("Please select an image file");
+      return;
+    }
+
+    try {
+      const method = currentNFTId ? "PATCH" : "POST";
+      const url = currentNFTId ? `${API_URL}${currentNFTId}/` : API_URL;
+
+      console.log("Submitting to:", url, "Method:", method);
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ":", value);
+      }
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          // JANGAN set Content-Type untuk multipart/form-data
+          // Browser akan otomatis set dengan boundary yang benar
+        },
+        body: formData,
+      });
+
+      console.log("Response status:", res.status);
+
+      // Check if response is JSON
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const responseData = await res.json();
+
+        if (res.ok) {
+          alert("NFT saved successfully!");
+          closeModal();
+          loadNFTs();
+        } else {
+          console.error("Error response:", responseData);
+          alert(
+            "Failed to save NFT:\n" + JSON.stringify(responseData, null, 2)
+          );
+        }
+      } else {
+        // Response bukan JSON, kemungkinan error page HTML
+        const text = await res.text();
+        console.error("Non-JSON response:", text);
+        alert("Server error. Please check Django console for details.");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("An error occurred: " + err.message);
+    }
+  }
+
+  // Delete NFT
+  async function deleteNFT(id, title) {
+    if (!confirm(`Delete "${title}"?`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Token ${TOKEN}` },
+      });
+
+      if (res.ok) {
+        alert("NFT deleted successfully!");
+        loadNFTs();
+      } else {
+        alert("Failed to delete NFT");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("An error occurred");
+    }
+  }
+
+  // Close Modal
+  function closeModal() {
+    document.getElementById("nftModal").classList.add("hidden");
+    currentNFTId = null;
+  }
+
+  // Load on page load
+  loadNFTs();
+</script>
+{% endblock %}

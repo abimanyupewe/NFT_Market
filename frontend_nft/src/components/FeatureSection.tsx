@@ -1,27 +1,23 @@
-import React from "react";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 const FeatureSection = () => {
-  const featured_nfts = [
-    {
-      pk: 1,
-      title: "Digital Art #1",
-      image: {
-        url: "https://example.com/nft1.png",
-      },
-      price: "250.00",
-      owner: {
-        username: "artlover123",
-      },
-    },
-    // Tambahkan NFT lain di sini jika perlu
-  ];
+  const appCtx = useContext(AppContext);
+  const navigate = useNavigate();
+
+  if (!appCtx) return null;
+
+  const { nfts, loading } = appCtx;
+
+  console.log("NFTs di FeatureSection:", nfts);
 
   return (
     <section className="mb-16">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-white">Featured NFTs</h2>
-        <a
-          href="/marketplace/nft_list"
+        <button
+          onClick={() => navigate("/explore")}
           className="text-blue-400 hover:text-blue-300 font-medium flex items-center"
         >
           View All
@@ -38,31 +34,46 @@ const FeatureSection = () => {
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </a>
+        </button>
       </div>
 
-      {featured_nfts.length > 0 ? (
+      {loading ? (
+        <div className="text-center text-white py-10">Loading...</div>
+      ) : nfts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {featured_nfts.map((nft) => (
+          {nfts.slice(0, 8).map((nft) => (
             <div
-              key={nft.pk}
-              className="bg-gray-800 rounded-xl overflow-hidden hover:transform hover:scale-105 hover:shadow-2xl transition-all duration-300 border border-gray-700"
+              key={nft.id || nft.pk}
+              onClick={() => navigate(`/nft/${nft.id}`)}
+              className="bg-gray-800 rounded-xl overflow-hidden hover:transform hover:scale-105 hover:shadow-2xl transition-all duration-300 border border-gray-700 cursor-pointer"
             >
               <div className="relative">
                 <div className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
                   {nft.image ? (
                     <img
-                      src={nft.image.url}
+                      src={nft.image}
                       alt={nft.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error(
+                          "Image failed to load:",
+                          e.currentTarget.src
+                        );
+                      }}
                     />
                   ) : (
                     <span className="text-6xl">🎨</span>
                   )}
                 </div>
                 <div className="absolute top-4 right-4">
-                  <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                    Listed
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      nft.status === "listed"
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-500 text-white"
+                    }`}
+                  >
+                    {nft.status === "listed" ? "Listed" : "Sold"}
                   </span>
                 </div>
               </div>
@@ -73,18 +84,23 @@ const FeatureSection = () => {
                 </h3>
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-2xl font-bold text-blue-400">
-                    ${nft.price}
+                    {nft.price} ETH
                   </div>
                   <div className="text-sm text-gray-400">
-                    Owner: {nft.owner.username}
+                    {nft.owner
+                      ? `Owner: ${nft.owner.username}`
+                      : `By: ${nft.creator.username}`}
                   </div>
                 </div>
-                <a
-                  href={`/marketplace/nft_detail/${nft.pk}`}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 block text-center"
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/nft/${nft.id}`);
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
                 >
                   View Details
-                </a>
+                </button>
               </div>
             </div>
           ))}

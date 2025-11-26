@@ -1,0 +1,534 @@
+{% extends 'market/base.html' %} 
+{% block title %}Transaction Management{%endblock %} 
+{% block page_title %}Transaction Management{% endblock %} 
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+  <!-- Filters -->
+  <div class="mb-6 flex gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2"
+        >Filter by Status</label
+      >
+      <select
+        id="statusFilter"
+        onchange="filterTransactions()"
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Status</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2"
+        >Filter by Payment</label
+      >
+      <select
+        id="paymentFilter"
+        onchange="filterTransactions()"
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Payment Methods</option>
+        <option value="eth">Ethereum (ETH)</option>
+        <option value="btc">Bitcoin (BTC)</option>
+        <option value="usdt">Tether (USDT)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div
+      class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white"
+    >
+      <p class="text-sm opacity-90">Total Transactions</p>
+      <p class="text-3xl font-bold" id="totalCount">0</p>
+    </div>
+    <div
+      class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white"
+    >
+      <p class="text-sm opacity-90">Completed</p>
+      <p class="text-3xl font-bold" id="completedCount">0</p>
+    </div>
+    <div
+      class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-4 text-white"
+    >
+      <p class="text-sm opacity-90">Pending</p>
+      <p class="text-3xl font-bold" id="pendingCount">0</p>
+    </div>
+    <div
+      class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white"
+    >
+      <p class="text-sm opacity-90">Total Volume</p>
+      <p class="text-3xl font-bold" id="totalVolume">0</p>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            ID
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            NFT
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            From
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            To
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Price
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Payment
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Status
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Date
+          </th>
+          <th
+            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody id="txTableBody" class="bg-white divide-y divide-gray-200">
+        <tr>
+          <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+            <div class="flex flex-col items-center">
+              <div
+                class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"
+              ></div>
+              <p>Loading transactions...</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div id="pagination" class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+      Showing <span id="showingFrom">0</span> to
+      <span id="showingTo">0</span> of
+      <span id="totalRecords">0</span> transactions
+    </div>
+    <div class="flex gap-2" id="paginationButtons"></div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div
+  id="detailModal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div
+    class="bg-white rounded-lg p-8 w-full max-w-2xl max-h-screen overflow-y-auto"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold">Transaction Details</h3>
+      <button
+        onclick="closeDetailModal()"
+        class="text-gray-500 hover:text-gray-700"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<script>
+  const API_URL = "http://127.0.0.1:8000/api/transactions/";
+  const TOKEN = "ba86004d902cac52e3c73b3bf8c80cd6c1d9e260";
+  let allTransactions = [];
+  let filteredTransactions = [];
+
+  // Load Transactions
+  async function loadTransactions() {
+    console.log("=== LOADING TRANSACTIONS ===");
+    console.log("API URL:", API_URL);
+
+    try {
+      const res = await fetch(API_URL, {
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Response Status:", res.status);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error Response:", errorText);
+        showError(`Failed to load transactions: ${res.status}`);
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Transaction Data:", data);
+
+      allTransactions = data.results || data;
+      filteredTransactions = allTransactions;
+
+      console.log("Total Transactions:", allTransactions.length);
+
+      updateStats();
+      renderTable(filteredTransactions);
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      showError("Network error occurred while loading transactions");
+    }
+  }
+
+  // Update Statistics
+  function updateStats() {
+    const total = allTransactions.length;
+    const completed = allTransactions.filter(
+      (tx) => tx.transaction_status === "completed"
+    ).length;
+    const pending = allTransactions.filter(
+      (tx) => tx.transaction_status === "pending"
+    ).length;
+    const totalVolume = allTransactions
+      .filter((tx) => tx.transaction_status === "completed")
+      .reduce((sum, tx) => sum + parseFloat(tx.price || 0), 0)
+      .toFixed(2);
+
+    document.getElementById("totalCount").textContent = total;
+    document.getElementById("completedCount").textContent = completed;
+    document.getElementById("pendingCount").textContent = pending;
+    document.getElementById("totalVolume").textContent = totalVolume + " ETH";
+  }
+
+  // Filter Transactions
+  function filterTransactions() {
+    const statusFilter = document.getElementById("statusFilter").value;
+    const paymentFilter = document.getElementById("paymentFilter").value;
+
+    filteredTransactions = allTransactions.filter((tx) => {
+      const matchStatus =
+        !statusFilter || tx.transaction_status === statusFilter;
+      const matchPayment =
+        !paymentFilter || tx.payment_method === paymentFilter;
+      return matchStatus && matchPayment;
+    });
+
+    renderTable(filteredTransactions);
+  }
+
+  // Render Table
+  function renderTable(txs) {
+    const tbody = document.getElementById("txTableBody");
+
+    if (!Array.isArray(txs)) {
+      console.error("Invalid data format:", txs);
+      showError("Invalid data format received");
+      return;
+    }
+
+    if (txs.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+            <i class="fas fa-inbox text-5xl mb-3 text-gray-300"></i>
+            <p class="text-lg">No transactions found</p>
+            <p class="text-sm">Transactions will appear here once NFTs are purchased</p>
+          </td>
+        </tr>
+      `;
+      updatePagination(0, 0, 0);
+      return;
+    }
+
+    tbody.innerHTML = txs
+      .map(
+        (tx) => `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 text-sm text-gray-900 font-medium">#${tx.id}</td>
+          <td class="px-6 py-4 text-sm">
+            <div class="flex items-center">
+              <div>
+                <p class="font-medium text-gray-900">${
+                  tx.nft?.title || "N/A"
+                }</p>
+                <p class="text-xs text-gray-500">Token ID: ${
+                  tx.nft?.token_id || "-"
+                }</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div>
+              <p class="font-medium text-gray-900">${
+                tx.from_user?.username || "-"
+              }</p>
+              <p class="text-xs text-gray-500">Creator</p>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div>
+              <p class="font-medium text-gray-900">${
+                tx.to_user?.username || "-"
+              }</p>
+              <p class="text-xs text-gray-500">Buyer</p>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div>
+              <p class="font-bold text-green-600">${tx.price} ETH</p>
+              <p class="text-xs text-gray-500">${
+                tx.transaction_type || "sale"
+              }</p>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentBadgeColor(
+              tx.payment_method
+            )}">
+              ${getPaymentMethodLabel(tx.payment_method)}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(
+              tx.transaction_status
+            )}">
+              ${tx.transaction_status.toUpperCase()}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            ${formatDate(tx.created_at)}
+          </td>
+          <td class="px-6 py-4 text-center">
+            <button
+              onclick="viewDetail(${tx.id})"
+              class="text-blue-600 hover:text-blue-800 mx-1"
+              title="View Details"
+            >
+              <p>View</p>
+            </button>
+          </td>
+        </tr>
+      `
+      )
+      .join("");
+
+    updatePagination(1, txs.length, txs.length);
+    console.log("Rendered", txs.length, "transactions");
+  }
+
+  // View Transaction Detail
+  async function viewDetail(id) {
+    console.log("Viewing transaction detail:", id);
+
+    try {
+      const res = await fetch(`${API_URL}${id}/`, {
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch transaction: ${res.status}`);
+      }
+
+      const tx = await res.json();
+      console.log("Transaction Detail:", tx);
+
+      const detailContent = `
+        <div class="space-y-4">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-lg mb-3">NFT Information</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-sm text-gray-600">Title</p>
+                <p class="font-medium">${tx.nft?.title || "N/A"}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Token ID</p>
+                <p class="font-medium">${tx.nft?.token_id || "-"}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-lg mb-3">Transaction Information</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-sm text-gray-600">Transaction ID</p>
+                <p class="font-medium">#${tx.id}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Status</p>
+                <p class="font-medium">${tx.transaction_status}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Type</p>
+                <p class="font-medium">${tx.transaction_type}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Payment Method</p>
+                <p class="font-medium">${getPaymentMethodLabel(
+                  tx.payment_method
+                )}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Price</p>
+                <p class="font-bold text-green-600">${tx.price} ETH</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Transaction Hash</p>
+                <p class="font-mono text-xs break-all">${
+                  tx.transaction_hash || "-"
+                }</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-lg mb-3">Parties</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-sm text-gray-600">From (Seller)</p>
+                <p class="font-medium">${tx.from_user?.username || "-"}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">To (Buyer)</p>
+                <p class="font-medium">${tx.to_user?.username || "-"}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Buyer Wallet</p>
+                <p class="font-mono text-xs break-all">${
+                  tx.wallet_address || "-"
+                }</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Creator Wallet</p>
+                <p class="font-mono text-xs break-all">${
+                  tx.creator_wallet_address || "-"
+                }</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-lg mb-3">Timestamps</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-sm text-gray-600">Created</p>
+                <p class="font-medium">${formatDate(tx.created_at)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Updated</p>
+                <p class="font-medium">${formatDate(tx.updated_at)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("detailContent").innerHTML = detailContent;
+      document.getElementById("detailModal").classList.remove("hidden");
+    } catch (error) {
+      console.error("Error loading detail:", error);
+      alert("Failed to load transaction details");
+    }
+  }
+
+  function closeDetailModal() {
+    document.getElementById("detailModal").classList.add("hidden");
+  }
+
+  // Helper Functions
+  function getStatusBadgeColor(status) {
+    const colors = {
+      completed: "bg-green-100 text-green-800",
+      pending: "bg-yellow-100 text-yellow-800",
+      failed: "bg-red-100 text-red-800",
+    };
+    return colors[status] || "bg-gray-100 text-gray-800";
+  }
+
+  function getPaymentBadgeColor(method) {
+    const colors = {
+      eth: "bg-blue-100 text-blue-800",
+      btc: "bg-orange-100 text-orange-800",
+      usdt: "bg-green-100 text-green-800",
+    };
+    return colors[method] || "bg-gray-100 text-gray-800";
+  }
+
+  function getPaymentMethodLabel(method) {
+    const labels = {
+      eth: "Ethereum",
+      btc: "Bitcoin",
+      usdt: "Tether",
+    };
+    return labels[method] || method;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function updatePagination(from, to, total) {
+    document.getElementById("showingFrom").textContent = from;
+    document.getElementById("showingTo").textContent = to;
+    document.getElementById("totalRecords").textContent = total;
+  }
+
+  function showError(message) {
+    const tbody = document.getElementById("txTableBody");
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="px-6 py-12 text-center text-red-500">
+          <i class="fas fa-exclamation-circle text-5xl mb-3"></i>
+          <p class="text-lg font-semibold">${message}</p>
+          <button onclick="loadTransactions()" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+            Retry
+          </button>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Load transactions on page load
+  loadTransactions();
+</script>
+{% endblock %}

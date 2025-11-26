@@ -2,7 +2,7 @@ import {assets} from "../assets/assets";
 
 export const HeroSection = () => {
   return (
-    <section className="top-0 w-full">
+    <section className="mt-10 w-full">
       <div
         className="h-lvh w-full bg-[#020617]"
         style={{ position: "relative", background: "#020617" }}

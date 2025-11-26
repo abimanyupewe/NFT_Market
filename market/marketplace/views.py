@@ -1,233 +1,235 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
-from django.contrib import messages
 from decimal import Decimal
 from .models import NFT, Transaction, UserProfile, CreatorProfile
-from .form import PurchaseForm, OfferForm, NFTForm, UserProfileForm, CreatorProfileForm
 from .serializers import NFTSerializer, TransactionSerializer, UserProfileSerializer, CreatorProfileSerializer
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django.views.generic import TemplateView
+from .form import NFTForm
+import time
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
+# ===== API ViewSets =====
+class NFTViewSet(viewsets.ModelViewSet):
+    """NFT CRUD API"""
+    queryset = NFT.objects.all()
+    serializer_class = NFTSerializer
+    permission_classes = [AllowAny]
+    
+    parser_classes = [MultiPartParser, FormParser, JSONParser] 
+    
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'creator']
+    search_fields = ['title', 'description', 'creator__username', 'owner__username']
+    ordering_fields = ['title', 'created_at', 'price']
+    ordering = ['-created_at']
 
-def home(request):
-    featured_nfts = NFT.objects.filter(status='listed')[:4]
-    recent_transactions = Transaction.objects.all()[:5]
-
-    # Tambahkan data untuk infografis component
-    total_assets = NFT.objects.filter(status='listed').count()
-    total_creators = CreatorProfile.objects.count()
-
-    context = {
-        'featured_nfts': featured_nfts,
-        'recent_transactions': recent_transactions,
-        'total_assets': total_assets,
-        'total_creators': total_creators,
-    }
-    return render(request, 'marketplace/home.html', context)
-
-
-class NFTListView(ListView):
-    """List all NFTs"""
-    model = NFT
-    template_name = 'marketplace/nft_list.html'
-    context_object_name = 'nfts'
-    paginate_by = 12
-
-    def get_queryset(self):
-        return NFT.objects.filter(status='listed')
-
-
-class NFTDetailView(DetailView):
-    """Detail view for a single NFT"""
-    model = NFT
-    context_object_name = 'nft'
-
-    def get_template_names(self):
-        """Return different templates based on NFT status"""
-        if self.object.status == 'sold':
-            return ['marketplace/nft_detail_.html']
-        return ['marketplace/nft_detail.html']
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        if self.object.status == 'sold':
-            # For sold NFTs - show completed transactions and pending offers
-            context['transactions'] = self.object.transactions.filter(transaction_status='completed')[:10]
-            
-            # Show pending offers only to the owner
-            if self.request.user == self.object.owner:
-                context['pending_offers'] = self.object.transactions.filter(
-                    transaction_status='pending',
-                    transaction_type='sale'
-                )
+    def perform_create(self, serializer):
+        """Set creator when creating NFT"""
+        if self.request.user.is_authenticated:
+            serializer.save(creator=self.request.user)
         else:
-            # For listed/draft NFTs - show all transactions
-            context['transactions'] = self.object.transactions.all()[:10]
-        
-        return context
+            pass
 
+    @action(detail=False, methods=['get'])
+    def listed(self, request):
+        nfts = NFT.objects.filter(status='listed')
+        serializer = self.get_serializer(nfts, many=True)
+        return Response(serializer.data)
 
-def buy_nft(request, nft_id):
-    nft = get_object_or_404(NFT, id=nft_id)
-    platform_fee = nft.price * Decimal('0.025')  # 2.5% platform fee
-    gas_fee = Decimal('5.00')  # Fixed gas fee
-    total_amount = nft.price + platform_fee + gas_fee
-    
-    # Get creator's wallet address from CreatorProfile
-    creator_profile = getattr(nft.creator, 'creator_profile', None)
-    creator_wallet = creator_profile.wallet_address if creator_profile and creator_profile.wallet_address else "0x1234567890abcdef1234567890abcdef12345678"
-    
-    form = PurchaseForm()
-    
-    context = {
-        'nft': nft,
-        'platform_fee': platform_fee,
-        'gas_fee': gas_fee,
-        'total_amount': total_amount,
-        'creator_wallet': creator_wallet,
-        'form': form,
-    }
-    return render(request, 'marketplace/transaction.html', context)
+    @action(detail=False, methods=['get'])
+    def sold(self, request):
+        nfts = NFT.objects.filter(status='sold')
+        serializer = self.get_serializer(nfts, many=True)
+        return Response(serializer.data)
 
-def process_purchase(request, nft_id):
-    if request.method == 'POST':
-        nft = get_object_or_404(NFT, id=nft_id)
-        form = PurchaseForm(request.POST)
+    @action(detail=True, methods=['post'])
+    def buy(self, request, pk=None):
+        """Buy NFT - Create Transaction"""
+        import logging
+        logger = logging.getLogger(__name__)
         
-        # Check if NFT is still available
-        if nft.status != 'listed':
-            messages.error(request, 'This NFT is no longer available for purchase.')
-            return redirect('marketplace:nft_detail', pk=nft_id)
-        
-        if form.is_valid():
-            wallet_address = form.cleaned_data['wallet_address']
-            payment_method = form.cleaned_data['payment_method']
+        try:
+            nft = self.get_object()
             
-            # Create transaction record with pending status
+            logger.info(f"=== BUY NFT #{nft.id} ===")
+            logger.info(f"Request data: {request.data}")
+            
+            # Validate NFT status
+            if nft.status != 'listed':
+                return Response(
+                    {'error': f'NFT is {nft.status}, not available for purchase'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get input
+            wallet_address = request.data.get('wallet_address')
+            payment_method = request.data.get('payment_method')
+            
+            # Validate input
+            if not wallet_address or not payment_method:
+                return Response(
+                    {'error': 'wallet_address and payment_method are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate payment method (eth, btc, usdt)
+            if payment_method not in ['eth', 'btc', 'usdt']:
+                return Response(
+                    {'error': f'Invalid payment_method: {payment_method}. Must be eth, btc, or usdt'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Calculate total
             platform_fee = nft.price * Decimal('0.025')
             gas_fee = Decimal('5.00')
             total_amount = nft.price + platform_fee + gas_fee
             
-            # Get creator's wallet address from CreatorProfile
+            # Get creator wallet
             creator_profile = getattr(nft.creator, 'creator_profile', None)
-            creator_wallet = creator_profile.wallet_address if creator_profile and creator_profile.wallet_address else "0x1234567890abcdef1234567890abcdef12345678"
+            creator_wallet = creator_profile.wallet_address if creator_profile else "0x1234567890abcdef"
             
+            # Get buyer
+            from django.contrib.auth.models import User
+            buyer_user = request.user if request.user.is_authenticated else User.objects.first()
+            
+            if not buyer_user:
+                return Response(
+                    {'error': 'No user available'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update NFT
+            nft.status = 'sold'
+            nft.owner = buyer_user
+            nft.save()
+            
+            logger.info(f"NFT #{nft.id} status updated to sold, owner: {buyer_user.username}")
+            
+            # Create Transaction
             transaction = Transaction.objects.create(
                 nft=nft,
                 transaction_type='sale',
-                transaction_status='pending',
-                from_user=nft.owner,
-                to_user=request.user,
+                transaction_status='completed',
+                from_user=nft.creator,
+                to_user=buyer_user,
                 price=total_amount,
                 payment_method=payment_method,
                 wallet_address=wallet_address,
                 creator_wallet_address=creator_wallet,
-                transaction_hash=f"tx_{nft_id}_{request.user.id}"
+                transaction_hash=f"tx_{nft.id}_{int(time.time())}"
             )
+            
+            logger.info(f"Transaction #{transaction.id} created successfully")
             
             # Ensure profiles exist
-            UserProfile.objects.get_or_create(user=request.user)
-            CreatorProfile.objects.get_or_create(
-                user=nft.creator,
-                defaults={'name': nft.creator.username}
-            )
+            UserProfile.objects.get_or_create(user=buyer_user, defaults={'name': buyer_user.username})
+            CreatorProfile.objects.get_or_create(user=nft.creator, defaults={'name': nft.creator.username})
             
-            messages.success(request, f'Purchase request submitted for "{nft.title}"! Please send payment to the creator\'s wallet address. The creator will confirm the transaction.')
-            return redirect('marketplace:nft_detail', pk=nft_id)
-        else:
-            messages.error(request, 'Please correct the errors in the form.')
-            return redirect('marketplace:buy_nft', nft_id=nft_id)
-    
-    return redirect('marketplace:buy_nft', nft_id=nft_id)
+            return Response({
+                'success': True,
+                'message': f'Purchase completed! You are now the owner of "{nft.title}".',
+                'transaction_id': transaction.id,
+                'transaction_hash': transaction.transaction_hash,
+                'nft_id': nft.id,
+                'nft_status': nft.status,
+                'total_amount': str(total_amount),
+                'buyer': buyer_user.username
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Error in buy action: {str(e)}", exc_info=True)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-def confirm_transaction(request, transaction_id):
-    """View for creator to confirm payment received"""
-    transaction = get_object_or_404(Transaction, id=transaction_id)
-    
-    # Only creator can confirm
-    if request.user != transaction.nft.creator:
-        messages.error(request, 'You are not authorized to confirm this transaction.')
-        return redirect('marketplace:nft_detail', pk=transaction.nft.id)
-    
-    if request.method == 'POST' and transaction.transaction_status == 'pending':
-        from django.utils import timezone
+class TransactionViewSet(viewsets.ModelViewSet):
+    """Transaction CRUD API"""
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+    permission_classes = [AllowAny]  # PENTING: Ubah ke AllowAny
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['transaction_status', 'transaction_type']
+    search_fields = ['nft__title', 'from_user__username', 'to_user__username']
+    ordering_fields = ['created_at', 'price']
+    ordering = ['-created_at']
+
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        """Confirm transaction"""
+        transaction = self.get_object()
         
-        # Update transaction status
+        if transaction.from_user != request.user:
+            return Response(
+                {'error': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if transaction.transaction_status != 'pending':
+            return Response(
+                {'error': 'Transaction is not pending'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        from django.utils import timezone
         transaction.transaction_status = 'completed'
         transaction.confirmed_at = timezone.now()
         transaction.save()
         
-        # Now transfer ownership
         nft = transaction.nft
         nft.owner = transaction.to_user
         nft.status = 'sold'
         nft.save()
         
-        messages.success(request, f'Transaction confirmed! "{nft.title}" has been transferred to {transaction.to_user.username}.')
-        return redirect('marketplace:nft_detail', pk=nft.id)
-    
-    return redirect('marketplace:nft_detail', pk=transaction.nft.id)
+        return Response({'message': 'Transaction confirmed'})
 
-class SoldNFTListView(ListView):
-    """List all sold NFTs"""
-    model = NFT
-    template_name = 'marketplace/sold_nft_list.html'
-    context_object_name = 'nfts'
-    paginate_by = 12
-
-    def get_queryset(self):
-        return NFT.objects.filter(status='sold')
-
-# Api View
-class NFTViewSet(viewsets.ModelViewSet):
-    queryset = NFT.objects.all()
-    serializer_class = NFTSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['title', 'description', 'creator__username', 'owner__username']
-    ordering_fields = ['title', 'created_at', 'price']
-
-class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
-    permission_classes = [IsAdminUser]
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['nft__title', 'from_user__username', 'to_user__username', 'transaction_type', 'transaction_status']
-    ordering_fields = ['nft__title', 'created_at', 'price', 'transaction_status']
 
 class UserProfileViewSet(viewsets.ModelViewSet):
+    """User Profile CRUD API"""
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['user__username', 'bio']
-    ordering_fields = ['user__username', 'created_at']
-    
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+
 class CreatorProfileViewSet(viewsets.ModelViewSet):
+    """Creator Profile CRUD API"""
     queryset = CreatorProfile.objects.all()
     serializer_class = CreatorProfileSerializer
-
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['user__username', 'bio']
-    ordering_fields = ['user__username', 'created_at']
+    search_fields = ['user__username', 'name', 'bio']
+    ordering_fields = ['created_at', 'total_sales']
+    ordering = ['-created_at']
 
-def infografis(request):
-    total_assets = NFT.objects.count()
-    total_creators = CreatorProfile.objects.count()
-    context = {
-        "total_assets": total_assets,
-        "total_creators": total_creators,
-    }
-    return render(request, "marketplace/components/infografis.html", context)
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """Get creator statistics"""
+        total_creators = CreatorProfile.objects.count()
+        total_created = NFT.objects.count()
+        total_sales = Transaction.objects.filter(transaction_type='sale').count()
+        
+        return Response({
+            'total_creators': total_creators,
+            'total_created': total_created,
+            'total_sales': total_sales
+        })
 
-# Utility functions
-def user_owned_assets_count(user):
-    """Count NFTs owned by a specific user"""
-    return NFT.objects.filter(owner=user).count()
 
-def total_marketplace_assets():
-    """Count total NFTs listed in marketplace"""
-    return NFT.objects.filter(status='listed').count()
+class NFTDashboardView(TemplateView):
+    template_name = 'market/nft_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['nft_form'] = NFTForm()
+        return context
+
+class TransactionDashboardView(TemplateView):
+    template_name = 'market/transaction_dashboard.html'

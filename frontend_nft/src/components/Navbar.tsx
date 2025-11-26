@@ -1,6 +1,5 @@
 "use client";
-import FeatureSection from "./FeatureSection";
-import { HeroSection } from "./HeroSection";
+
 import {
   Navbar,
   NavBody,
@@ -12,35 +11,60 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "./ui/resizable-navbar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
 
 export const NavbarSection = () => {
   const navItems = [
-    {
-      name: "Features",
-      link: "#features",
-    },
-    {
-      name: "Pricing",
-      link: "#pricing",
-    },
-    {
-      name: "Contact",
-      link: "#contact",
-    },
+    { name: "Home", link: "/" },
+    { name: "Explore", link: "/explore" },
+    { name: "Collection", link: "/collection" },
+    { name: "Auctions", link: "/auctions" },
   ];
 
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [hovered, setHovered] = useState(-1);
+
+  useEffect(() => {
+    const currentIdx = navItems.findIndex(
+      (item) => item.link === location.pathname
+    );
+    if (currentIdx !== -1) {
+      setActiveIdx(currentIdx);
+    }
+  }, [location.pathname]);
+
+  const onItemClick = (idx: number) => {
+    setActiveIdx(idx);
+  };
+
   return (
-    <div className="relative w-full top-0 z-50">
+    <div className="w-full top-5 z-50">
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
           <NavbarLogo />
-          <NavItems items={navItems} />
+          <NavItems
+            items={navItems}
+            className=""
+            onItemClick={(idx: number) => setActiveIdx(idx)}
+            activeIdx={activeIdx}
+          />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="secondary">Login</NavbarButton>
-            <NavbarButton variant="primary">Book a call</NavbarButton>
+            <Link to="/login">
+              <NavbarButton variant="secondary" className="text-primary">
+                Login
+              </NavbarButton>
+            </Link>
+            <Link to="/connect-wallet">
+              <NavbarButton variant="primary" className="bg-primary text-white">
+                Connect Wallet
+              </NavbarButton>
+            </Link>
           </div>
         </NavBody>
 
@@ -59,36 +83,53 @@ export const NavbarSection = () => {
             onClose={() => setIsMobileMenuOpen(false)}
           >
             {navItems.map((item, idx) => (
-              <a
-                key={`mobile-link-${idx}`}
-                href={item.link}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="relative text-neutral-600 dark:text-neutral-300"
+              <Link
+                key={`link-${idx}`}
+                to={item.link}
+                onMouseEnter={() => setHovered(idx)}
+                onClick={() => {
+                  onItemClick(idx);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={cn(
+                  "relative px-4 py-2",
+                  activeIdx === idx
+                    ? "text-white"
+                    : "text-neutral-600 dark:text-neutral-300"
+                )}
               >
-                <span className="block">{item.name}</span>
-              </a>
+                {hovered === idx && (
+                  <motion.div
+                    layoutId="hovered"
+                    className="absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800 -z-10"
+                  />
+                )}
+                <span className="relative z-20">{item.name}</span>
+              </Link>
             ))}
             <div className="flex w-full flex-col gap-4">
-              <NavbarButton
-                onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
+              <Link
+                to="/login"
                 className="w-full"
-              >
-                Login
-              </NavbarButton>
-              <NavbarButton
                 onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
-                className="w-full"
               >
-                Book a call
-              </NavbarButton>
+                <NavbarButton variant="primary" className="w-full">
+                  Login
+                </NavbarButton>
+              </Link>
+              <Link
+                to="/connect-wallet"
+                className="w-full"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <NavbarButton variant="primary" className="w-full">
+                  Connect Wallet
+                </NavbarButton>
+              </Link>
             </div>
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
-      <HeroSection />
-      <FeatureSection />
     </div>
   );
 };
