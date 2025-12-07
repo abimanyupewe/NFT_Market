@@ -1,4 +1,3 @@
-
 # Mantri Duit
 
 > Your Personal Financial Reality Checker.
@@ -41,38 +40,52 @@ Pastikan Anda sudah menginstall:
 * Python 3.10 atau lebih baru
 * Git
 
-
 ### 1. Clone Repository
+```bash
 git clone [https://github.com/username-anda/mantri-duit.git](https://github.com/username-anda/mantri-duit.git)
 cd mantri-duit
+2. Setup Virtual Environment
+Disarankan menggunakan virtual environment agar dependencies tidak bentrok.
 
-### 2. Setup Virtual Environment
-```bash
+Windows:
+
+Bash
+
 python -m venv env
 env\Scripts\activate
+Mac / Linux:
 
-Mac / Linux :
-```bash
+Bash
+
 python3 -m venv env
 source env/bin/activate
+3. Install Dependencies
+Bash
 
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
+pip install -r src/requirements.txt
+4. Environment Configuration
+Duplikasi file contoh .env untuk konfigurasi lokal.
 
-### 4. Environment Configuration
-```bash
-.env
+Bash
 
-### 5. Database Setup
-```bash
+cp .env.example .env
+5. Database Setup
+Masuk ke folder source dan jalankan migrasi.
+
+Bash
+
+cd src
 python manage.py migrate
+6. Run the Application
+Bash
 
-### 6. Run the Application
-```bash
 python manage.py runserver
+Buka browser dan akses: https://www.google.com/search?q=http://127.0.0.1:8000/
 
-### Demo Video
+Demo Video
+Lihat demonstrasi fitur Mantri Duit dalam 30 detik:
 
-### Team
+[Link Video Demo]
+
+Team
 Dibuat oleh [Nama Tim/Nama Anda].
