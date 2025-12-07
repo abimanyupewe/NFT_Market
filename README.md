@@ -41,8 +41,8 @@ Pastikan Anda sudah menginstall:
 * Python 3.10 atau lebih baru
 * Git
 
+
 ### 1. Clone Repository
-```bash
 git clone [https://github.com/username-anda/mantri-duit.git](https://github.com/username-anda/mantri-duit.git)
 cd mantri-duit
 
