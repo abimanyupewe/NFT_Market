@@ -45,3 +45,34 @@ Pastikan Anda sudah menginstall:
 ```bash
 git clone [https://github.com/username-anda/mantri-duit.git](https://github.com/username-anda/mantri-duit.git)
 cd mantri-duit
+
+### 2. Setup Virtual Environment
+```bash
+python -m venv env
+env\Scripts\activate
+
+Mac / Linux :
+```bash
+python3 -m venv env
+source env/bin/activate
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+
+### 4. Environment Configuration
+```bash
+.env
+
+### 5. Database Setup
+```bash
+python manage.py migrate
+
+### 6. Run the Application
+```bash
+python manage.py runserver
+
+### Demo Video
+
+### Team
+Dibuat oleh [Nama Tim/Nama Anda].
