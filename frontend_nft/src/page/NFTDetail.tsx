@@ -226,7 +226,7 @@ const NFTDetail = () => {
             </div>
 
             {/* Action Buttons */}
-            {nft.status === "listed" && !nft.owner && (
+            {nft.status === "listed" && (
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={() => navigate(`/transaction/${nft.id}`)}

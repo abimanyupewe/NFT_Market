@@ -62,8 +62,8 @@ const Transaction = () => {
       paymentMethod === "ethereum"
         ? (Math.random() * 0.01 + 0.001).toFixed(6)
         : paymentMethod === "bitcoin"
-        ? (Math.random() * 0.0001 + 0.00001).toFixed(8)
-        : "0.00";
+          ? (Math.random() * 0.0001 + 0.00001).toFixed(8)
+          : "0.00";
     const totalPrice =
       paymentMethod === "bank_transfer"
         ? parseFloat(nft.price).toFixed(2)
@@ -132,7 +132,7 @@ const Transaction = () => {
 
   if (!context) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#020617] text-white">
+      <div className="flex justify-center items-center min-h-screen bg-black-cus text-white">
         Error: Context not found
       </div>
     );
@@ -140,7 +140,7 @@ const Transaction = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+      <div className="flex justify-center items-center min-h-screen bg-black-cus">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
@@ -148,12 +148,12 @@ const Transaction = () => {
 
   if (!nft) {
     return (
-      <div className="container mx-auto px-4 py-8 min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="container mx-auto px-4 py-8 min-h-screen bg-black-cus flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-white">NFT Not Found</h2>
           <button
             onClick={() => navigate("/explore")}
-            className="bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
+            className="bg-linear-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
           >
             Back to Explore
           </button>
@@ -162,9 +162,9 @@ const Transaction = () => {
     );
   }
 
-  if (!transactionComplete && (nft.status !== "listed" || nft.owner !== null)) {
+  if (!transactionComplete && nft.status !== "listed") {
     return (
-      <div className="container mx-auto px-4 py-8 min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="container mx-auto px-4 py-8 min-h-screen bg-black-cus flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-white">
             NFT Not Available
@@ -174,7 +174,7 @@ const Transaction = () => {
           </p>
           <button
             onClick={() => navigate("/explore")}
-            className="bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
+            className="bg-linear-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
           >
             Back to Explore
           </button>
@@ -184,7 +184,7 @@ const Transaction = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+    <div className="min-h-screen bg-black-cus pt-24 pb-10">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 opacity-10 -z-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
@@ -211,7 +211,7 @@ const Transaction = () => {
                 <h2 className="text-xl font-semibold mb-4 text-white">
                   NFT Details
                 </h2>
-                <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 rounded-xl overflow-hidden mb-4">
+                <div className="aspect-square bg-linear-to-br from-[#FC1E5C]/80 to-purple-600/80 rounded-xl overflow-hidden mb-4">
                   <img
                     src={nft.image}
                     alt={nft.title}
@@ -432,11 +432,10 @@ const Transaction = () => {
                 <button
                   onClick={handlePurchase}
                   disabled={processing}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                    processing
-                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
-                  }`}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${processing
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-linear-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
+                    }`}
                 >
                   {processing ? (
                     <span className="flex items-center justify-center gap-2">
@@ -520,7 +519,7 @@ const Transaction = () => {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => navigate(`/nft/${nft.id}`)}
-                  className="bg-gradient-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
+                  className="bg-linear-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
                 >
                   View NFT
                 </button>
