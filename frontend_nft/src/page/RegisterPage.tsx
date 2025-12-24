@@ -1,6 +1,6 @@
-import { LoginForm } from "../components/login-form";
+import { RegisterForm } from "../components/register-form";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <div
       className="flex min-h-svh items-center justify-center p-6 md:p-10 bg-bg-primary relative"
@@ -24,9 +24,9 @@ export default function LoginPage() {
           backgroundSize: "40px 40px, 40px 40px, 100% 100%",
         }}
       />
-      {/* Centered Login Form */}
+      {/* Centered Register Form - slightly wider for more fields if needed, but 5xl should be enough */}
       <div className="relative z-10 w-full max-w-4xl flex items-center justify-center">
-        <LoginForm />
+        <RegisterForm />
       </div>
     </div>
   );

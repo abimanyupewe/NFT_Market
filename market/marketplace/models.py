@@ -6,11 +6,18 @@ from django.dispatch import receiver
 
 class UserProfile(models.Model):
     """Extended user profile for NFT marketplace"""
+    ROLE_CHOICES = [
+        ('customer', 'Customer'),
+        ('author', 'Author'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     name = models.CharField(max_length=150, blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
     wallet_address = models.CharField(max_length=100, blank=True)
     assets_count = models.PositiveIntegerField(default=0, help_text="Jumlah NFT yang dimiliki")
+    total_spent = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, help_text="Total pembelian dalam ETH")
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -19,6 +26,24 @@ class UserProfile(models.Model):
         """Update the count of NFTs owned by this user"""
         self.assets_count = NFT.objects.filter(owner=self.user).count()
         self.save(update_fields=['assets_count'])
+
+    def update_total_spent(self):
+        """Update total spent from transactions"""
+        from django.db.models import Sum
+        # Import Transaction inside method to avoid circular import if necessary, 
+        # but Transaction depends on User, so UserProfile (which depends on User) is fine.
+        # However, Transaction depends on NFT which depends on User. 
+        # Using string reference or importing inside is safer.
+        from .models import Transaction 
+        
+        total = Transaction.objects.filter(
+            to_user=self.user, 
+            transaction_type='sale', 
+            transaction_status='completed'
+        ).aggregate(Sum('price'))['price__sum'] or 0
+        
+        self.total_spent = total
+        self.save(update_fields=['total_spent'])
 
     def __str__(self):
         return f"{self.user.username}'s profile"
@@ -57,13 +82,14 @@ class NFT(models.Model):
     """NFT item model"""
     STATUS_CHOICES = [
         ('draft', 'Draft'),
+        ('pre_listing', 'Pre-Listing'),
         ('listed', 'Listed'),
         ('sold', 'Sold'),
     ]
 
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image = models.ImageField(upload_to='nfts/')
+    image = models.ImageField(upload_to='nfts/', blank=True, null=True)
     owner = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -73,7 +99,8 @@ class NFT(models.Model):
     )
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_nfts')
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    listing_date = models.DateTimeField(null=True, blank=True, help_text="Waktu listing otomatis jika status pre-listing")
     token_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
     contract_address = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -139,7 +166,6 @@ class Transaction(models.Model):
 @receiver(post_save, sender=NFT)
 def update_owner_assets_count_on_save(sender, instance, **kwargs):
     """Update assets count when NFT ownership changes"""
-    # Update new owner's count
     if instance.owner:
         profile, created = UserProfile.objects.get_or_create(
             user=instance.owner,
@@ -147,7 +173,6 @@ def update_owner_assets_count_on_save(sender, instance, **kwargs):
         )
         profile.update_assets_count()
     
-    # If this was an ownership transfer, update previous owner's count
     if hasattr(instance, '_original_owner'):
         if instance._original_owner != instance.owner and instance._original_owner:
             try:
@@ -159,7 +184,7 @@ def update_owner_assets_count_on_save(sender, instance, **kwargs):
 @receiver(post_delete, sender=NFT)
 def update_owner_assets_count_on_delete(sender, instance, **kwargs):
     """Update assets count when NFT is deleted"""
-    if instance.owner:  # Add this check
+    if instance.owner: 
         try:
             profile = UserProfile.objects.get(user=instance.owner)
             profile.update_assets_count()

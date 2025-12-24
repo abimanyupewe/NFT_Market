@@ -4,10 +4,12 @@ from .views import (
     NFTViewSet, 
     TransactionViewSet, 
     UserProfileViewSet, 
-    CreatorProfileViewSet
+    CreatorProfileViewSet,
+    AuthViewSet
 )
 
 router = DefaultRouter()
+router.register(r'auth', AuthViewSet, basename='auth')
 router.register(r'nfts', NFTViewSet, basename='nft')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
 router.register(r'user-profiles', UserProfileViewSet, basename='userprofile')

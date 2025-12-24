@@ -1,10 +1,10 @@
 import { useContext } from "react";
 import { AppContext } from "../context/AppContext";
-import { useNavigate } from "react-router-dom";
+import { NFTCard } from "../components/NFTCard";
+import { Flame, Rocket } from "lucide-react";
 
 const Explore = () => {
   const context = useContext(AppContext);
-  const navigate = useNavigate();
 
   if (!context) {
     return <div>Error: Context not found</div>;
@@ -12,13 +12,22 @@ const Explore = () => {
 
   const { nfts, loading, error } = context;
 
+  // Filter NFTs
+  const upcomingNFTs = nfts
+    .filter((nft) => nft.status === "pre_listing")
+    .sort((a, b) => {
+      const dateA = a.listing_date ? new Date(a.listing_date).getTime() : 0;
+      const dateB = b.listing_date ? new Date(b.listing_date).getTime() : 0;
+      return dateA - dateB;
+    });
+
   const availableNFTs = nfts.filter(
-    (nft) => nft.owner === null && nft.status === "listed"
+    (nft) => nft.status === "listed"
   );
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+      <div className="flex justify-center items-center min-h-screen bg-black-cus">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
@@ -26,14 +35,14 @@ const Explore = () => {
 
   if (error) {
     return (
-      <div className="text-center text-red-500 p-8 min-h-screen bg-[#020617]">
+      <div className="text-center text-red-500 p-8 min-h-screen bg-black-cus">
         <p className="text-xl">Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+    <div className="min-h-screen bg-bg-primary pt-24 pb-10">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 opacity-10 -z-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
@@ -41,95 +50,56 @@ const Explore = () => {
       </div>
 
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-white">Explore NFTs</h1>
-          <p className="text-gray-400">
-            Discover {availableNFTs.length} unique NFTs available for purchase
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {availableNFTs.map((nft) => (
-            <div
-              key={nft.id || nft.pk}
-              onClick={() => navigate(`/nft/${nft.id}`)}
-              className="group relative bg-[#0f172a]/30 backdrop-blur-sm rounded-xl overflow-hidden hover:transform hover:shadow-2xl transition-all duration-300 border border-[#1e293b]/50 hover:border-[#FC1E5C]/30 cursor-pointer"
-            >
-              {/* Glassmorphism overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-
-              <div className="relative">
-                <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center overflow-hidden">
-                  {nft.image ? (
-                    <img
-                      src={nft.image}
-                      alt={nft.title}
-                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
-                      onError={(e) => {
-                        console.error(
-                          "Image failed to load:",
-                          e.currentTarget.src
-                        );
-                      }}
-                    />
-                  ) : (
-                    <span className="text-6xl">🎨</span>
-                  )}
-                </div>
-                <div className="absolute top-2 right-2">
-                  <span
-                    className={`px-3 py-1 rounded-sm text-xs font-semibold backdrop-blur-md ${
-                      nft.status === "listed"
-                        ? "bg-green-500/80 text-white"
-                        : "bg-gray-500/80 text-white"
-                    }`}
-                  >
-                    {nft.status === "listed" ? "Listed" : "Sold"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-6 relative z-10">
-                <div className="flex justify-between">
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {nft.title}
-                  </h3>
-                  <div className="text-sm text-gray-400">
-                    {nft.owner
-                      ? `Owner: ${nft.owner.username}`
-                      : `By: ${nft.creator.username}`}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="text-sm font-semibold text-[#FC1E5C]">
-                    {nft.price} ETH
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/nft/${nft.id}`);
-                    }}
-                    className=" bg-primary text-white py-2 px-4 font-semibold transition-all duration-200 transform hover:scale-105"
-                  >
-                    View Details
-                  </button>
-                </div>
+        {/* Upcoming Drops Section */}
+        {upcomingNFTs.length > 0 && (
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <Rocket className="w-8 h-8 text-[#FC1E5C]" />
+              <div>
+                <h2 className="text-3xl font-bold text-white">Upcoming Drops</h2>
+                <p className="text-gray-400">Be ready! These exclusive items are dropping soon.</p>
               </div>
             </div>
-          ))}
-        </div>
 
-        {availableNFTs.length === 0 && !loading && (
-          <div className="text-center py-16 bg-[#0f172a]/30 backdrop-blur-sm rounded-xl border border-[#1e293b]/50">
-            <div className="text-6xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
-              No NFTs Available
-            </h3>
-            <p className="text-gray-500">
-              All NFTs have been sold. Check back later for new listings
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {upcomingNFTs.map((nft) => (
+                <NFTCard key={nft.id || nft.pk} nft={nft} />
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Main Market Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Flame className="w-8 h-8 text-orange-500" />
+            <div>
+              <h1 className="text-3xl font-bold text-white">Explore NFTs</h1>
+              <p className="text-gray-400">
+                Discover {availableNFTs.length} unique NFTs available for purchase
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {availableNFTs.map((nft) => (
+              <NFTCard key={nft.id || nft.pk} nft={nft} />
+            ))}
+          </div>
+
+          {availableNFTs.length === 0 && !loading && (
+            <div className="text-center py-16 bg-[#0f172a]/30 backdrop-blur-sm rounded-xl border border-[#1e293b]/50">
+              <div className="text-6xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                No Listings Available
+              </h3>
+              <p className="text-gray-500">
+                All items are currently sold or not listed yet.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

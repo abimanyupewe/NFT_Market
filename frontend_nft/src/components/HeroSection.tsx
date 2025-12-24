@@ -4,7 +4,7 @@ export const HeroSection = () => {
   return (
     <section className="mt-10 w-full">
       <div
-        className="h-lvh w-full bg-[#020617]"
+        className="h-lvh w-full bg-black-cus"
         style={{ position: "relative", background: "#020617" }}
       >
     <div
@@ -33,11 +33,11 @@ export const HeroSection = () => {
             <div className="relative px-8 py-16 w-1/2">
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
                 Unlock the True Value of{" "}
-                <span className="bg-gradient-to-r from-indigo-700 via-primary to-orange-400 bg-clip-text text-transparent font-pixel">
+                <span className="bg-linear-to-r from-indigo-700 via-primary to-orange-400 bg-clip-text text-transparent font-pixel">
                   DIGITAL ASSETS
                 </span>
                 {" "}with{" "}
-                <span className="bg-gradient-to-r from-indigo-700 via-primary to-orange-400 bg-clip-text text-transparent font-pixel">
+                <span className="bg-linear-to-r from-indigo-700 via-primary to-orange-400 bg-clip-text text-transparent font-pixel">
                   NFT ARTS
                 </span>
               </h1>

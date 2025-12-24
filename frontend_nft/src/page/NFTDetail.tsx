@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AppContext } from "../context/AppContext";
+import { AppContext, type NFT } from "../context/AppContext";
 
 const NFTDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,13 +40,47 @@ const NFTDetail = () => {
     fetchNFT();
   }, [id, context]);
 
+  // State for countdown
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (nft && nft.status === 'pre_listing' && nft.listing_date) {
+      const calculateTimeLeft = () => {
+        const difference = +new Date(nft.listing_date!) - +new Date();
+        let timeLeft = null;
+
+        if (difference > 0) {
+          timeLeft = {
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((difference / 1000 / 60) % 60),
+            seconds: Math.floor((difference / 1000) % 60),
+          };
+        }
+        return timeLeft;
+      };
+
+      setTimeLeft(calculateTimeLeft());
+      const timer = setInterval(() => {
+        setTimeLeft(calculateTimeLeft());
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [nft]);
+
   if (!context) {
     return <div>Error: Context not found</div>;
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+      <div className="flex justify-center items-center min-h-screen bg-black-cus">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
@@ -54,12 +88,12 @@ const NFTDetail = () => {
 
   if (!nft) {
     return (
-      <div className="container mx-auto px-4 py-8 min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="container mx-auto px-4 py-8 min-h-screen bg-black-cus flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-white">NFT Not Found</h2>
           <button
             onClick={() => navigate("/explore")}
-            className="bg-gradient-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
+            className="bg-linear-to-r from-[#FC1E5C] to-purple-600 text-white px-6 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700"
           >
             Back to Explore
           </button>
@@ -69,9 +103,10 @@ const NFTDetail = () => {
   }
 
   const imageUrl = nft.image || "/placeholder-nft.png";
+  const isUpcoming = nft.status === 'pre_listing';
 
   return (
-    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+    <div className="min-h-screen bg-black-cus pt-24 pb-10">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 opacity-10 -z-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
@@ -90,24 +125,48 @@ const NFTDetail = () => {
           {/* Image Section */}
           <div className="relative group">
             <div className="bg-[#0f172a]/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#1e293b]/50 hover:border-[#FC1E5C] transition-all">
-              <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center">
+              <div className="aspect-square bg-linear-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center relative">
                 <img
                   src={imageUrl}
                   alt={nft.title}
                   className="w-full h-full object-cover"
                 />
+                {/* Countdown Overlay for Image */}
+                {isUpcoming && timeLeft && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-4 border-t border-white/10">
+                    <div className="flex items-center justify-center gap-6 text-white font-mono">
+                      <div className="text-center">
+                        <span className="block text-2xl font-bold text-[#FC1E5C]">{timeLeft.days}</span>
+                        <span className="text-xs text-gray-400">DAYS</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block text-2xl font-bold text-white">{timeLeft.hours}</span>
+                        <span className="text-xs text-gray-400">HRS</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block text-2xl font-bold text-white">{timeLeft.minutes}</span>
+                        <span className="text-xs text-gray-400">MIN</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block text-2xl font-bold text-[#FC1E5C]">{timeLeft.seconds}</span>
+                        <span className="text-xs text-gray-400">SEC</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status badge on image */}
               <div className="absolute top-4 right-4">
                 <span
-                  className={`px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-md ${
-                    nft.status === "listed"
-                      ? "bg-green-500/90 text-white"
+                  className={`px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-md ${nft.status === "listed"
+                    ? "bg-green-500/90 text-white"
+                    : nft.status === "pre_listing"
+                      ? "bg-yellow-500/90 text-white"
                       : "bg-gray-500/90 text-white"
-                  }`}
+                    }`}
                 >
-                  {nft.status.toUpperCase()}
+                  {nft.status === "pre_listing" ? "UPCOMING" : nft.status.toUpperCase().replace('_', ' ')}
                 </span>
               </div>
             </div>
@@ -121,7 +180,7 @@ const NFTDetail = () => {
             <div className="mb-6 pb-6 border-b border-white/10">
               <p className="text-gray-400 text-sm mb-3">Created By</p>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FC1E5C] to-purple-600 flex items-center justify-center text-white text-lg font-bold">
+                <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#FC1E5C] to-purple-600 flex items-center justify-center text-white text-lg font-bold">
                   {nft.creator.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -133,12 +192,12 @@ const NFTDetail = () => {
               </div>
             </div>
 
-            {/* Owner Section */}
-            {nft.owner && (
+            {/* Owner Section - Only show if SOLD or explicitly owned by someone else */}
+            {nft.owner && nft.status === 'sold' ? (
               <div className="mb-6 pb-6 border-b border-white/10">
                 <p className="text-gray-400 text-sm mb-3">Owned By</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
                     {nft.owner.username.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -149,12 +208,17 @@ const NFTDetail = () => {
                   </div>
                 </div>
               </div>
-            )}
+            ) : nft.status === 'pre_listing' ? (
+              <div className="mb-6 pb-6 border-b border-white/10">
+                <p className="text-gray-400 text-sm mb-3">Ownership</p>
+                <p className="text-white italic">Not yet distributed (Pre-Listing)</p>
+              </div>
+            ) : null}
 
             {/* Price Section */}
-            <div className="mb-6 p-6 bg-gradient-to-br from-[#1e293b] to-[#0f172a] rounded-xl border border-white/10">
+            <div className="mb-6 p-6 bg-linear-to-br from-[#1e293b] to-[#0f172a] rounded-xl border border-white/10">
               <p className="text-gray-400 text-sm mb-2">
-                {nft.owner ? "Sold Price" : "Current Price"}
+                {nft.status === 'sold' ? "Sold Price" : "Current Price"}
               </p>
               <p className="text-4xl font-bold text-[#FC1E5C]">
                 {nft.price} ETH
@@ -166,7 +230,7 @@ const NFTDetail = () => {
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={() => navigate(`/transaction/${nft.id}`)}
-                  className="flex-1 bg-gradient-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
+                  className="flex-1 bg-linear-to-r from-[#FC1E5C] to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
                 >
                   Buy Now
                 </button>
@@ -174,6 +238,12 @@ const NFTDetail = () => {
                   Make Offer
                 </button>
               </div>
+            )}
+
+            {isUpcoming && (
+              <button className="w-full mb-6 bg-gray-700 text-gray-400 font-bold py-4 px-6 rounded-xl cursor-not-allowed border border-white/10">
+                Coming Soon (Pre-Listing)
+              </button>
             )}
 
             {nft.status === "sold" && nft.owner && (
@@ -222,8 +292,10 @@ const NFTDetail = () => {
                   </p>
                 </div>
                 <div className="bg-white/5 p-4 rounded-lg">
-                  <p className="text-gray-400 text-xs mb-1">Chain</p>
-                  <p className="font-semibold text-white text-sm">Ethereum</p>
+                  <p className="text-gray-400 text-xs mb-1">Listing Date</p>
+                  <p className="font-semibold text-white text-sm">
+                    {nft.listing_date ? new Date(nft.listing_date).toLocaleString() : '-'}
+                  </p>
                 </div>
               </div>
             </div>

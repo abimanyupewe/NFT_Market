@@ -1,25 +1,42 @@
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { AppContext, type NFT } from "../context/AppContext";
+import { NFTCard } from "../components/NFTCard";
 
 const Collection = () => {
   const context = useContext(AppContext);
-  const navigate = useNavigate();
 
   if (!context) {
     return <div>Error: Context not found</div>;
   }
 
-  const { nfts, loading, error } = context;
+  // Local state for sold NFTs
+  const [soldNFTs, setSoldNFTs] = useState<NFT[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Filter NFT yang sudah ada ownernya (sudah sold)
-  const soldNFTs = nfts.filter(
-    (nft) => nft.owner !== null || nft.status === "sold"
-  );
+  // Fetch Sold NFTs from Backend API
+  useEffect(() => {
+    const fetchSoldNFTs = async () => {
+      try {
+        const backendUrl = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+        const res = await fetch(`${backendUrl}/api/nfts/sold/`);
+        if (!res.ok) throw new Error("Failed to fetch sold NFTs");
+        const data = await res.json();
+        setSoldNFTs(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load sold collection");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSoldNFTs();
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#020617]">
+      <div className="flex justify-center items-center min-h-screen bg-bg-primary">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FC1E5C]"></div>
       </div>
     );
@@ -27,14 +44,14 @@ const Collection = () => {
 
   if (error) {
     return (
-      <div className="text-center text-red-500 p-8 min-h-screen bg-[#020617]">
+      <div className="text-center text-red-500 p-8 min-h-screen bg-bg-primary">
         <p className="text-xl">Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] pt-24 pb-10">
+    <div className="min-h-screen bg-bg-primary pt-24 pb-10">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 opacity-10 -z-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl"></div>
@@ -53,44 +70,7 @@ const Collection = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {soldNFTs.map((nft) => (
-            <div
-              key={nft.id}
-              onClick={() => navigate(`/nft/${nft.id}`)}
-              className="group relative bg-[#0f172a]/30 backdrop-blur-sm rounded-2xl overflow-hidden hover:transform hover:shadow-2xl transition-all duration-300 border border-[#1e293b]/50 hover:border-[#FC1E5C] cursor-pointer"
-            >
-              {/* Glassmorphism overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-
-              <div className="relative">
-                <div className="aspect-square bg-gradient-to-br from-[#FC1E5C]/80 to-purple-600/80 flex items-center justify-center overflow-hidden">
-                  <img
-                    src={nft.image}
-                    alt={nft.title}
-                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
-                  />
-                </div>
-
-                {/* SOLD tag */}
-                <div className="absolute top-3 left-3">
-                  <span className="px-3 py-1 rounded-lg text-xs font-bold backdrop-blur-md bg-red-500/90 text-white">
-                    SOLD
-                  </span>
-                </div>
-
-                {/* Price badge */}
-                <div className="absolute top-3 right-3">
-                  <span className="px-3 py-1 rounded-lg text-xs font-bold backdrop-blur-md bg-gray-500/90 text-white">
-                    {nft.price} ETH
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-4 relative z-10">
-                <h3 className="text-lg font-bold text-white mb-2 truncate">
-                  {nft.title}
-                </h3>
-              </div>
-            </div>
+            <NFTCard key={nft.id} nft={nft} />
           ))}
         </div>
 

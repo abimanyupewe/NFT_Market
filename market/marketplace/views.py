@@ -1,11 +1,14 @@
+from django.views.generic.base import TemplateView
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.views.generic import TemplateView
-from rest_framework import viewsets, status
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework import viewsets, status
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,20 +16,68 @@ import time
 import logging
 
 from .models import NFT, Transaction, UserProfile, CreatorProfile
-from .serializers import NFTSerializer, TransactionSerializer, UserProfileSerializer, CreatorProfileSerializer
+from .permissions import IsOwnerOrReadOnly
+from .serializers import (
+    NFTSerializer, TransactionSerializer, UserProfileSerializer, 
+    CreatorProfileSerializer, RegisterSerializer
+)
 from .form import NFTForm
 
 logger = logging.getLogger(__name__)
+
+# ===== Auth ViewSet =====
+class AuthViewSet(viewsets.ViewSet):
+    """
+    ViewSet for Authentication (Login & Register)
+    """
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user_id': user.pk,
+                'username': user.username,
+                'email': user.email,
+                'message': 'Registration successful'
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        serializer = AuthTokenSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
+            # Get user role
+            try:
+                role = user.profile.role
+            except:
+                role = 'customer'
+
+            return Response({
+                'token': token.key,
+                'user_id': user.pk,
+                'username': user.username,
+                'email': user.email,
+                'role': role
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ===== API ViewSets =====
 class NFTViewSet(viewsets.ModelViewSet):
     """NFT CRUD API"""
     queryset = NFT.objects.all()
     serializer_class = NFTSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsOwnerOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'creator']
+    filterset_fields = ['status', 'creator', 'owner']
     search_fields = ['title', 'description', 'creator__username', 'owner__username']
     ordering_fields = ['title', 'created_at', 'price']
     ordering = ['-created_at']
@@ -34,23 +85,30 @@ class NFTViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Set creator when creating NFT"""
         if self.request.user.is_authenticated:
-            serializer.save(creator=self.request.user)
+            serializer.save(creator=self.request.user, owner=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def listed(self, request):
         """Get listed NFTs"""
         nfts = self.queryset.filter(status='listed')
         serializer = self.get_serializer(nfts, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def sold(self, request):
         """Get sold NFTs"""
         nfts = self.queryset.filter(status='sold')
         serializer = self.get_serializer(nfts, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def upcoming(self, request):
+        """Get upcoming (pre-listing) NFTs ordered by listing date"""
+        nfts = self.queryset.filter(status='pre_listing').order_by('listing_date')
+        serializer = self.get_serializer(nfts, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def buy(self, request, pk=None):
         """Buy NFT - Create Transaction"""
         try:
@@ -112,8 +170,15 @@ class NFTViewSet(viewsets.ModelViewSet):
             )
             
             # Ensure user profiles exist
-            UserProfile.objects.get_or_create(user=buyer_user, defaults={'name': buyer_user.username})
-            CreatorProfile.objects.get_or_create(user=nft.creator, defaults={'name': nft.creator.username})
+            buyer_profile, _ = UserProfile.objects.get_or_create(user=buyer_user, defaults={'name': buyer_user.username})
+            creator_profile_obj, _ = CreatorProfile.objects.get_or_create(user=nft.creator, defaults={'name': nft.creator.username})
+            
+            # Update stats
+            buyer_profile.update_assets_count()
+            buyer_profile.update_total_spent()
+            
+            creator_profile_obj.update_total_sales()
+            creator_profile_obj.update_total_created()
             
             logger.info(f"Purchase successful: Transaction #{transaction.id}")
             
@@ -187,7 +252,7 @@ class CreatorProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def statistics(self, request):
-        """Get creator statistics"""
+        """Get global platform statistics"""
         from django.db.models import Sum
         
         total_creators = CreatorProfile.objects.count()
@@ -203,6 +268,51 @@ class CreatorProfileViewSet(viewsets.ModelViewSet):
             'total_created': total_nfts,
             'total_sales': total_sales,
             'total_volume': str(total_volume)
+        })
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def dashboard_stats(self, request):
+        """Get statistics for the logged-in creator"""
+        from django.db.models import Count, Sum
+        
+        user = request.user
+        
+        # Ensure user has a creator profile
+        if not hasattr(user, 'creator_profile'):
+            return Response(
+                {'error': 'User is not a creator'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # 1. Total NFTs created
+        total_nfts = NFT.objects.filter(creator=user).count()
+        
+        # 2. Total Sales (Count of sold NFTs)
+        total_sold = Transaction.objects.filter(
+            from_user=user,
+            transaction_type='sale',
+            transaction_status='completed'
+        ).count()
+        
+        # 3. Total Buyers (Unique buyers)
+        buyers_count = Transaction.objects.filter(
+            from_user=user,
+            transaction_type='sale',
+            transaction_status='completed'
+        ).values('to_user').distinct().count()
+        
+        # 4. Total Earnings (Sum of sales price)
+        total_earnings = Transaction.objects.filter(
+            from_user=user,
+            transaction_type='sale',
+            transaction_status='completed'
+        ).aggregate(total=Sum('price'))['total'] or 0
+        
+        return Response({
+            'total_created': total_nfts,
+            'total_sales_count': total_sold,
+            'total_buyers': buyers_count,
+            'total_earnings': str(total_earnings)
         })
 
 

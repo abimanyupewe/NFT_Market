@@ -1,11 +1,12 @@
+import UserSpendSection from "../components/UserSpendSection";
+import Statistics from "../components/Statistics";
+import Exchange from "../components/Exchange";
+import Creator from "../components/Creator";
+import FeatureSection from "../components/FeatureSection";
+import HowItWorks from "../components/HowItWorks";
 import Benefits from "../components/Benefits";
 import CallToAction from "../components/CallToAction";
-import Creator from "../components/Creator";
-import Exchange from "../components/Exchange";
-import FeatureSection from "../components/FeatureSection";
 import { HeroSection } from "../components/HeroSection";
-import HowItWorks from "../components/HowItWorks";
-import Statistics from "../components/Statistics";
 
 const Home = () => {
   return (
@@ -15,6 +16,7 @@ const Home = () => {
       <Exchange />
       <Creator />
       <FeatureSection />
+      <UserSpendSection />
       <HowItWorks />
       <Benefits />
       <CallToAction />
