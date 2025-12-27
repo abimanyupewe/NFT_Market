@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { assets } from "../assets/assets";
-import { cn } from "../lib/utils";
+import { cn } from "../lib/util";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Field, FieldGroup, FieldLabel } from "./ui/field";
@@ -44,7 +44,11 @@ export function RegisterForm({
     const success = await register(registrationData);
 
     if (success) {
-      navigate("/");
+      if (role === 'author') {
+        navigate("/author/dashboard");
+      } else {
+        navigate("/");
+      }
     }
     setLoading(false);
   };

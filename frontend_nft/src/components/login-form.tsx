@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { assets } from "../assets/assets";
-import { cn } from "../lib/utils";
+import { cn } from "../lib/util";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Field, FieldGroup, FieldLabel } from "./ui/field";

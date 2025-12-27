@@ -14,7 +14,7 @@ import {
 import { useState, useEffect, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn } from "../lib/util";
 import { AppContext } from "../context/AppContext";
 import { ProfileModal } from "./profile-modal";
 import { UserCircle } from "lucide-react";

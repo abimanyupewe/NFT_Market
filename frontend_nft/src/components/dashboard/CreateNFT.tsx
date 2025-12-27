@@ -206,7 +206,15 @@ export default function CreateNFT() {
                                     name="listing_date"
                                     type="datetime-local"
                                     className="bg-black/20 border-white/10 text-white placeholder:text-gray-500"
-                                    defaultValue={initialData?.listing_date ? new Date(initialData.listing_date).toISOString().slice(0, 16) : ''}
+                                    defaultValue={
+                                        initialData?.listing_date
+                                            ? new Date(initialData.listing_date).toISOString().slice(0, 16)
+                                            : (() => {
+                                                const now = new Date();
+                                                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                                                return now.toISOString().slice(0, 16);
+                                            })()
+                                    }
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     Set when this item should go live.

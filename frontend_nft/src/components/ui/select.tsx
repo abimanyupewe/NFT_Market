@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "../../lib/utils"
+import { cn } from "../../lib/util"
 
 // Simplified Select for quick implementation without radix-ui dependency complexity if possible, 
 // BUT users expect shadcn Select which relies on Radix UI.

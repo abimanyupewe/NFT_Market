@@ -6,7 +6,7 @@ import {
     User,
     Images
 } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn } from "../../lib/util";
 import { Button } from "../ui/button";
 import { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
