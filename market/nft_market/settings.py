@@ -66,7 +66,10 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5170",
+    "http://localhost:5180"
+]
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API Market NFT',

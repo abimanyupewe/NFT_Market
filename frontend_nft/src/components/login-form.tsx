@@ -38,11 +38,7 @@ export function LoginForm({
     const user = await login(data);
 
     if (user) {
-      if (user.role === 'author') {
-        navigate("/author/dashboard");
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     }
     setLoading(false);
   };

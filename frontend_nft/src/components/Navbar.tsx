@@ -31,7 +31,7 @@ export const NavbarSection = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(-1);
-  const { isAuthenticated } = useContext(AppContext)!;
+  const { isAuthenticated, userProfile } = useContext(AppContext)!;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
@@ -72,7 +72,15 @@ export const NavbarSection = () => {
                   onClick={() => setIsProfileOpen(true)}
                   className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
                 >
-                  <UserCircle className="h-5 w-5 text-primary" />
+                  {userProfile?.profile_image ? (
+                    <img
+                      src={userProfile.profile_image}
+                      alt="Profile"
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircle className="h-5 w-5 text-primary" />
+                  )}
                 </button>
               )}
 

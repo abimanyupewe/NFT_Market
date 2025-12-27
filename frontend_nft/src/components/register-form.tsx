@@ -44,11 +44,7 @@ export function RegisterForm({
     const success = await register(registrationData);
 
     if (success) {
-      if (role === 'author') {
-        navigate("/author/dashboard");
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     }
     setLoading(false);
   };

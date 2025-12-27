@@ -34,6 +34,24 @@ export interface Creator {
 }
 
 
+
+export interface UserProfile {
+  id: number;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+  name: string;
+  bio: string;
+  wallet_address: string;
+  assets_count: number;
+  total_spent: string;
+  profile_image: string;
+}
+
 interface User {
   id: number;
   username: string;
@@ -41,12 +59,7 @@ interface User {
   role?: string;
 }
 
-interface DashboardStats {
-  total_created: number;
-  total_sales_count: number;
-  total_buyers: number;
-  total_earnings: string;
-}
+
 
 interface AppContextType {
   nfts: NFT[];
@@ -68,12 +81,10 @@ interface AppContextType {
     payment_method: string;
   }) => Promise<boolean>;
   // Dashboard Methods
-  getDashboardStats: () => Promise<DashboardStats | null>;
-  getMyNFTs: () => Promise<NFT[]>;
+  userProfile: UserProfile | null;
+  getUserProfile: () => Promise<UserProfile | null>;
+  updateUserProfile: (data: FormData) => Promise<boolean>;
   getMyCollection: () => Promise<NFT[]>;
-  createNFT: (data: FormData) => Promise<boolean>;
-  updateNFT: (id: number, data: FormData) => Promise<boolean>;
-  deleteNFT: (id: number) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,6 +92,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [nfts, setNFTs] = useState<NFT[]>([]);
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -332,39 +344,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Dashboard Implementations
-  const getDashboardStats = async (): Promise<DashboardStats | null> => {
-    if (!token) return null;
-    try {
-      const res = await fetch(`${backendUrl}/api/creator-profiles/dashboard_stats/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (res.ok) {
-        return await res.json();
-      }
-      return null;
-    } catch (err) {
-      console.error("Error fetching stats:", err);
-      return null;
-    }
-  };
 
-  const getMyNFTs = async (): Promise<NFT[]> => {
-    if (!token || !user?.id) return [];
-    try {
-      // Filter by creator ID directly using Django Filter Backend
-      const res = await fetch(`${backendUrl}/api/nfts/?creator=${user.id}`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.results || data || [];
-      }
-      return [];
-    } catch (err) {
-      console.error("Error fetching my NFTs:", err);
-      return [];
-    }
-  };
+
+
 
   const getMyCollection = async (): Promise<NFT[]> => {
     if (!token || !user?.id) return [];
@@ -384,83 +366,60 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const createNFT = async (data: FormData): Promise<boolean> => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/nfts/`, {
-        method: "POST",
-        headers: { Authorization: `Token ${token}` },
-        body: data,
-      });
 
+
+
+  const getUserProfile = async (): Promise<UserProfile | null> => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${backendUrl}/api/user-profiles/me/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
       if (res.ok) {
-        toast.success("NFT Created successfully!");
-        getDataNFTs();
-        return true;
-      } else {
-        const errData = await res.json();
-        console.error("Create NFT Error:", errData);
-        toast.error("Failed to create NFT");
-        return false;
+        const data = await res.json();
+        setUserProfile(data);
+        return data;
       }
+      return null;
     } catch (err) {
-      console.error("Create NFT Network Error:", err);
-      toast.error("Network error");
-      return false;
-    } finally {
-      setLoading(false);
+      console.error("Error fetching user profile:", err);
+      return null;
     }
   };
 
-  const updateNFT = async (id: number, data: FormData): Promise<boolean> => {
+  const updateUserProfile = async (data: FormData): Promise<boolean> => {
     setLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/api/nfts/${id}/`, {
+      const res = await fetch(`${backendUrl}/api/user-profiles/me/`, {
         method: "PATCH",
         headers: { Authorization: `Token ${token}` },
         body: data,
       });
 
       if (res.ok) {
-        toast.success("NFT Updated successfully!");
-        getDataNFTs();
+        toast.success("Profile updated successfully!");
+        getUserProfile();
         return true;
       } else {
-        toast.error("Failed to update NFT");
+        toast.error("Failed to update profile");
         return false;
       }
     } catch (err) {
-      console.error("Update NFT Error:", err);
+      console.error("Update profile error:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteNFT = async (id: number): Promise<boolean> => {
-    if (!confirm("Are you sure you want to delete this NFT?")) return false;
-    setLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/nfts/${id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      if (res.ok) {
-        toast.success("NFT Deleted");
-        getDataNFTs();
-        return true;
-      } else {
-        toast.error("Failed to delete NFT");
-        return false;
-      }
-    } catch (err) {
-      console.error("Delete NFT Error:", err);
-      return false;
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (token) {
+      getUserProfile();
     }
-  };
+  }, [token]);
+
+
+
 
   useEffect(() => {
     getDataNFTs();
@@ -482,12 +441,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     refreshCreators: getDataCreator,
     getNFTById,
     purchaseNFT,
-    getDashboardStats,
     getMyCollection,
-    getMyNFTs,
-    createNFT,
-    updateNFT,
-    deleteNFT,
+    userProfile,
+    getUserProfile,
+    updateUserProfile,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

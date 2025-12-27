@@ -9,7 +9,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-    const { user, logout } = useContext(AppContext)!;
+    const { user, logout, userProfile } = useContext(AppContext)!;
 
     return (
         <AnimatePresence>
@@ -37,9 +37,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 {/* Avatar - Centered Static */}
                                 <div className="flex justify-center mb-4">
                                     <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-black-cus bg-black-cus shadow-xl overflow-hidden">
-                                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/80 to-purple-600/80 text-4xl font-bold text-white">
-                                            {user?.username?.charAt(0).toUpperCase()}
-                                        </div>
+                                        {userProfile?.profile_image ? (
+                                            <img
+                                                src={userProfile.profile_image}
+                                                alt={user?.username}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/80 to-purple-600/80 text-4xl font-bold text-white">
+                                                {user?.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -62,7 +70,10 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                         My Collection
                                     </Button>
                                     <Button
-                                        onClick={onClose}
+                                        onClick={() => {
+                                            window.location.href = "/edit-profile";
+                                            onClose();
+                                        }}
                                         variant="outline"
                                         className="h-11 w-full rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white font-medium transition-all"
                                     >

@@ -84,6 +84,16 @@ export const Footer = () => {
               </li>
               <li>
                 <a
+                  href="http://localhost:5170/sign-up"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-[#FC1E5C] transition-colors font-semibold"
+                >
+                  Join as Creator
+                </a>
+              </li>
+              <li>
+                <a
                   href="#"
                   className="text-gray-400 hover:text-[#FC1E5C] transition-colors"
                 >
