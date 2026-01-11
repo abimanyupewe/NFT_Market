@@ -21,19 +21,13 @@ const UserSpendSection = () => {
         const fetchTopSpenders = async () => {
             try {
                 const backendUrl = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-                const res = await fetch(`${backendUrl}/api/user-profiles/`);
+                // Use the new dedicated endpoint for top collectors which is public
+                const res = await fetch(`${backendUrl}/api/user-profiles/top_collectors/`);
                 if (!res.ok) throw new Error("Failed to fetch user profiles");
 
                 const data = await res.json();
-                const profiles = Array.isArray(data) ? data : (data.results || []);
-
-                // Filter users who have spent money and sort by total_spent desc
-                const sortedUsers = profiles
-                    .filter((u: UserProfile) => parseFloat(u.total_spent || "0") > 0)
-                    .sort((a: UserProfile, b: UserProfile) => parseFloat(b.total_spent || "0") - parseFloat(a.total_spent || "0"))
-                    .slice(0, 10); // Take top 10
-
-                setUsers(sortedUsers);
+                // Backend already sorts and filters
+                setUsers(data);
             } catch (err) {
                 console.error("Error fetching top spenders:", err);
             } finally {

@@ -200,7 +200,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """Transaction CRUD API"""
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['transaction_status', 'transaction_type']
     search_fields = ['nft__title', 'from_user__username', 'to_user__username']
@@ -234,7 +234,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     """User Profile CRUD API"""
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['user__username', 'bio']
     ordering = ['-created_at']
@@ -254,6 +254,14 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def top_collectors(self, request):
+        """Get top collectors based on total spent"""
+        # Filter users who have spent money
+        profiles = self.queryset.filter(total_spent__gt=0).order_by('-total_spent', '-assets_count')[:10]
+        serializer = self.get_serializer(profiles, many=True)
+        return Response(serializer.data)
 
 
 class CreatorProfileViewSet(viewsets.ModelViewSet):
