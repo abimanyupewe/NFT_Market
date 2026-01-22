@@ -1,4 +1,4 @@
-import {assets} from "../assets/assets";
+import { assets } from "../assets/assets";
 
 export const HeroSection = () => {
   return (
@@ -7,14 +7,14 @@ export const HeroSection = () => {
         className="h-lvh w-full bg-black-cus"
         style={{ position: "relative", background: "#020617" }}
       >
-    <div
-      className="absolute inset-0 z-0"
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 0,
-        background: "#020617",
-        backgroundImage: `linear-gradient(
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            background: "#020617",
+            backgroundImage: `linear-gradient(
           to right,
           rgba(71, 85, 105, 0.15) 1px,
           transparent 1px
@@ -26,9 +26,9 @@ export const HeroSection = () => {
           rgba(168, 85, 247, 0.05) 40%,
           transparent 70%
         )`,
-        backgroundSize: "40px 40px, 40px 40px, 100% 100%"
-      }}
-    >
+            backgroundSize: "40px 40px, 40px 40px, 100% 100%"
+          }}
+        >
           <div className="flex">
             <div className="relative px-8 py-16 w-1/2">
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">

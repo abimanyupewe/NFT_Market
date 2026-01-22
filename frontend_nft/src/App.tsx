@@ -15,14 +15,16 @@ import UserCollectionPage from "./page/UserCollectionPage";
 import EditProfilePage from "./page/EditProfilePage";
 
 import { LoginRequiredModal } from "./components/login-required-modal";
+import { ProgressLoader } from "./components/ui/progress-loader";
 import { AppContext } from "./context/AppContext";
 import { useContext } from "react";
 
 function App() {
-    const { loginModalOpen, closeLoginModal } = useContext(AppContext)!;
+    const { loginModalOpen, closeLoginModal, loading } = useContext(AppContext)!;
 
     return (
         <>
+            <ProgressLoader isLoading={loading} />
             <Toaster position="top-center" reverseOrder={false} />
             <LoginRequiredModal isOpen={loginModalOpen} onClose={closeLoginModal} />
             <NavbarSection />
