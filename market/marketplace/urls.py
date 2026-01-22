@@ -1,14 +1,20 @@
-from django.urls import include, path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import (
+    NFTViewSet, 
+    TransactionViewSet, 
+    UserProfileViewSet, 
+    CreatorProfileViewSet,
+    AuthViewSet
+)
 
-app_name = 'marketplace'
+router = DefaultRouter()
+router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'nfts', NFTViewSet, basename='nft')
+router.register(r'transactions', TransactionViewSet, basename='transaction')
+router.register(r'user-profiles', UserProfileViewSet, basename='userprofile')
+router.register(r'creator-profiles', CreatorProfileViewSet, basename='creatorprofile')
 
 urlpatterns = [
-    # Admin Dashboard URLs
-    path('', views.NFTDashboardView.as_view(), name='nft_dashboard'),
-    path('nfts/', views.NFTDashboardView.as_view(), name='nft_list'),
-    path('transactions/', views.TransactionDashboardView.as_view(), name='transaction_list'),
-    
-    # API URLs
-    path('api/', include('marketplace.api_urls')),
+    path('', include(router.urls)),
 ]

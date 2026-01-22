@@ -7,8 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('marketplace.urls')),
-    path('api/', include('marketplace.api_urls')),
+    path('api/', include('marketplace.urls')),
     path('api/auth/token/', obtain_auth_token, name='api-token-auth'),
     # --- URL DOKUMENTASI API ---
     # Menghasilkan file schema.yml

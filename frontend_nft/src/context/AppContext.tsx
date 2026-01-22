@@ -85,9 +85,12 @@ interface AppContextType {
   getUserProfile: () => Promise<UserProfile | null>;
   updateUserProfile: (data: FormData) => Promise<boolean>;
   getMyCollection: () => Promise<NFT[]>;
+  loginModalOpen: boolean;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [nfts, setNFTs] = useState<NFT[]>([]);
@@ -95,6 +98,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Auth State
   const [user, setUser] = useState<User | null>(() => {
@@ -270,13 +274,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const openLoginModal = () => setLoginModalOpen(true);
+  const closeLoginModal = () => setLoginModalOpen(false);
+
   const purchaseNFT = async (purchaseData: {
     nft_id: number;
     wallet_address: string;
     payment_method: string;
   }): Promise<boolean> => {
     if (!token) {
-      toast.error("Please login to purchase NFT");
+      openLoginModal();
       return false;
     }
 
@@ -426,7 +433,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     getDataCreator();
   }, []);
 
-  const value = {
+  const value: AppContextType = {
     nfts,
     creators,
     loading,
@@ -444,10 +451,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     getMyCollection,
     userProfile,
     getUserProfile,
+
     updateUserProfile,
+    loginModalOpen,
+    openLoginModal,
+    closeLoginModal,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export { AppContext };
+

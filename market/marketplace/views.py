@@ -1,4 +1,4 @@
-from django.views.generic.base import TemplateView
+
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -21,7 +21,7 @@ from .serializers import (
     NFTSerializer, TransactionSerializer, UserProfileSerializer, 
     CreatorProfileSerializer, RegisterSerializer
 )
-from .form import NFTForm
+
 
 logger = logging.getLogger(__name__)
 
@@ -362,16 +362,3 @@ class CreatorProfileViewSet(viewsets.ModelViewSet):
             'total_earnings': str(total_earnings)
         })
 
-
-# ===== Template Views =====
-class NFTDashboardView(TemplateView):
-    template_name = 'market/nft_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['nft_form'] = NFTForm()
-        return context
-
-
-class TransactionDashboardView(TemplateView):
-    template_name = 'market/transaction_dashboard.html'
