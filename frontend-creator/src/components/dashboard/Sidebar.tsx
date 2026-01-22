@@ -64,7 +64,7 @@ export function Sidebar({ className }: SidebarProps) {
                                         "w-full justify-start gap-2",
                                         pathname === item.href
                                             ? "bg-primary/20 text-primary hover:bg-primary/30"
-                                            : "hover:bg-white/5 hover:text-white"
+                                            : "text-white hover:bg-white/5 hover:text-white"
                                     )}
                                 >
                                     <item.icon className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
                     </h2>
                     <div className="space-y-1">
                         <Link to="/profile">
-                            <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-white/5 hover:text-white">
+                            <Button variant="ghost" className="w-full justify-start gap-2 text-white hover:bg-white/5 hover:text-white">
                                 <User className="h-4 w-4" />
                                 Profile
                             </Button>

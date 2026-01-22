@@ -14,7 +14,7 @@ const testimonials = [
 
 function Exchange() {
   return (
-     <div className="h-96 flex flex-col antialiased bg-[#020617] items-center justify-center relative overflow-hidden">
+    <div className="h-96 flex flex-col antialiased bg-[#020617] items-center justify-center relative overflow-hidden">
       <h2 className="text-3xl font-bold text-center mb-12 text-white">
         Trusted By Leading Exchanges
       </h2>
