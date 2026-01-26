@@ -2,21 +2,13 @@
 
 A comprehensive NFT Marketplace solution featuring a main user marketplace, a dedicated creator dashboard, and a robust Django backend.
 
-## 📂 Folder Structure
-
-The project is organized into three main components:
-
-## 📂 Folder Structure
-
-The project is organized into three main components, each with its own internal structure:
-
-## 📂 Folder Structure
+## Folder Structure
 
 The project is organized into three main components. Below is the detailed structure:
 
 ```bash
 NFT_Market/
-├── frontend_nft/                  # 🛍️ User Marketplace (React + Vite)
+├── frontend_nft/                  # User Marketplace (React + Vite)
 │   ├── src/
 │   │   ├── page/                  # Application Routes/Pages
 │   │   │   ├── Home.tsx           # Landing Page
@@ -38,7 +30,7 @@ NFT_Market/
 │   │   ├── lib/                   # Utilities
 │   │   └── App.tsx                # Main Router Config
 │
-├── frontend-creator/              # 🎨 Creator/Admin Dashboard (React + Vite)
+├── frontend-creator/              # Creator/Admin Dashboard (React + Vite)
 │   ├── src/
 │   │   ├── pages/                 # Dashboard Routes
 │   │   │   ├── DashboardHome.tsx
@@ -49,7 +41,7 @@ NFT_Market/
 │   │   │   └── ui/                # Shared UI Elements
 │   │   └── App.tsx
 │
-└── market/                        # 🔙 Backend API (Django REST Framework)
+└── market/                        # Backend API (Django REST Framework)
     ├── marketplace/               # Main Application Logic
     │   ├── models.py              # Database Schemas (NFT, Collection, User)
     │   ├── views.py               # API Enpoints & Logic
@@ -63,7 +55,7 @@ NFT_Market/
     └── manage.py                  # CLI Entry Point
 ```
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Framework**: React 19 (via Vite)
@@ -78,7 +70,7 @@ NFT_Market/
 
 ---
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 Follow these steps to get the project running locally.
 
