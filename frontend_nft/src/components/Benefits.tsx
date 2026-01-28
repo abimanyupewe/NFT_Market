@@ -1,4 +1,41 @@
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
 const Benefits = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".section-header", {
+        scrollTrigger: {
+          trigger: ".section-header",
+          start: "top 80%",
+        },
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      });
+
+      gsap.from(".benefit-card", {
+        scrollTrigger: {
+          trigger: ".benefits-grid",
+          start: "top 85%",
+        },
+        y: 50,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out"
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
   const benefits = [
     {
       title: "Secure Transactions",
@@ -118,20 +155,20 @@ const Benefits = () => {
   ];
 
   return (
-    <div className="py-16 bg-[#020617]">
+    <div ref={containerRef} className="py-16 bg-[#020617]">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 section-header">
           <h2 className="text-4xl font-bold mb-4 text-white">Why Choose Us</h2>
           <p className="text-gray-400 text-lg">
             Experience the best NFT marketplace features
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 benefits-grid">
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="bg-[#0f172a]/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-[#1e293b]/50 hover:bg-primary/10 group"
+              className="bg-[#0f172a]/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-[#1e293b]/50 hover:bg-primary/10 group benefit-card"
             >
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 {benefit.icon}

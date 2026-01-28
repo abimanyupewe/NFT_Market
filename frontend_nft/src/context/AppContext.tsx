@@ -59,8 +59,6 @@ interface User {
   role?: string;
 }
 
-
-
 interface AppContextType {
   nfts: NFT[];
   creators: Creator[];

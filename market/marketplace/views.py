@@ -12,6 +12,7 @@ from rest_framework import viewsets, status
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 import time
 import logging
 
@@ -32,6 +33,11 @@ class AuthViewSet(viewsets.ViewSet):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=RegisterSerializer,
+        responses={201: OpenApiTypes.OBJECT},
+        description="Register a new user"
+    )
     @action(detail=False, methods=['post'])
     def register(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -47,6 +53,11 @@ class AuthViewSet(viewsets.ViewSet):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        request=AuthTokenSerializer,
+        responses={200: OpenApiTypes.OBJECT},
+        description="Login to obtain auth token"
+    )
     @action(detail=False, methods=['post'])
     def login(self, request):
         serializer = AuthTokenSerializer(data=request.data, context={'request': request})
