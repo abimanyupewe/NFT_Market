@@ -43,7 +43,7 @@ const Creator = () => {
           </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto">
+        <div className="flex gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {Array.isArray(creators) && creators.length > 0 ? (
             [...creators]
               .sort((a, b) => parseFloat(b.total_sales || "0") - parseFloat(a.total_sales || "0"))

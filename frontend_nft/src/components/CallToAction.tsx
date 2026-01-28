@@ -19,9 +19,20 @@ const CallToAction = () => {
         }
       });
 
-      tl.from(".cta-title", { y: 30, opacity: 0, duration: 0.8, ease: "power3.out" })
-        .from(".cta-desc", { y: 20, opacity: 0, duration: 0.8 }, "-=0.6")
-        .from(".cta-btn", { y: 20, opacity: 0, duration: 0.5, stagger: 0.2, ease: "back.out(1.5)" }, "-=0.6");
+      tl.fromTo(".cta-title",
+        { y: 30, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, duration: 0.8, ease: "power3.out" }
+      )
+        .fromTo(".cta-desc",
+          { y: 20, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.8 },
+          "-=0.6"
+        )
+        .fromTo(".cta-btn",
+          { y: 20, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.2, ease: "back.out(1.5)" },
+          "-=0.6"
+        );
 
       // Background Blobs Loop
       gsap.to(".cta-blob-1", {
@@ -47,7 +58,7 @@ const CallToAction = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="py-20 bg-gradient-to-r from-[#020617] via-[#0f172a] to-[#020617] relative overflow-hidden">
+    <div ref={containerRef} className="py-20 bg-gradient-to-r from-bg-primary via-[#0f172a] to-bg-primary relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#FC1E5C] rounded-full blur-3xl cta-blob-1"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-3xl cta-blob-2"></div>
@@ -71,7 +82,7 @@ const CallToAction = () => {
             </button>
             <button
               onClick={() => navigate("/login")}
-              className="border border-gray-400 text-gray-300 hover:text-white hover:border-white px-8 py-3 font-semibold transition-all duration-700 cta-btn rounded-full"
+              className="border border-gray-400 text-white hover:text-gray-200 hover:border-white px-8 py-3 font-semibold transition-all duration-700 cta-btn rounded-full"
             >
               Create Account
             </button>

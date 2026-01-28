@@ -9,28 +9,34 @@ const Benefits = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from(".section-header", {
-        scrollTrigger: {
-          trigger: ".section-header",
-          start: "top 80%",
-        },
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".section-header",
+        { y: 50, autoAlpha: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".section-header",
+            start: "top 80%",
+          },
+          y: 0,
+          autoAlpha: 1,
+          duration: 1,
+          ease: "power3.out"
+        }
+      );
 
-      gsap.from(".benefit-card", {
-        scrollTrigger: {
-          trigger: ".benefits-grid",
-          start: "top 85%",
-        },
-        y: 50,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power2.out"
-      });
+      gsap.fromTo(".benefit-card",
+        { y: 50, autoAlpha: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".benefits-grid",
+            start: "top 85%",
+          },
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power2.out"
+        }
+      );
     }, containerRef);
 
     return () => ctx.revert();
@@ -155,7 +161,7 @@ const Benefits = () => {
   ];
 
   return (
-    <div ref={containerRef} className="py-16 bg-[#020617]">
+    <div ref={containerRef} className="py-16 bg-bg-primary">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 section-header">
           <h2 className="text-4xl font-bold mb-4 text-white">Why Choose Us</h2>

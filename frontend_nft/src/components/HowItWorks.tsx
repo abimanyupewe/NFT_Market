@@ -10,43 +10,52 @@ const HowItWorks = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Header Animation
-      gsap.from(".section-header", {
-        scrollTrigger: {
-          trigger: ".section-header",
-          start: "top 80%",
-        },
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".section-header",
+        { y: 50, autoAlpha: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".section-header",
+            start: "top 80%",
+          },
+          y: 0,
+          autoAlpha: 1,
+          duration: 1,
+          ease: "power3.out"
+        }
+      );
 
       // Steps Animation
-      gsap.from(".step-card", {
-        scrollTrigger: {
-          trigger: ".steps-grid",
-          start: "top 85%",
-        },
-        y: 100,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: "back.out(1.7)"
-      });
+      gsap.fromTo(".step-card",
+        { y: 100, autoAlpha: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".steps-grid",
+            start: "top 85%",
+          },
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: "back.out(1.7)"
+        }
+      );
 
       // Arrow Animation
-      gsap.from(".step-arrow", {
-        scrollTrigger: {
-          trigger: ".steps-grid",
-          start: "top 85%",
-        },
-        width: 0,
-        opacity: 0,
-        duration: 1,
-        delay: 0.5,
-        stagger: 0.2,
-        ease: "power2.inOut"
-      });
+      gsap.fromTo(".step-arrow",
+        { width: 0, autoAlpha: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".steps-grid",
+            start: "top 85%",
+          },
+          width: 32, // w-8 = 32px roughly
+          autoAlpha: 1,
+          duration: 1,
+          delay: 0.5,
+          stagger: 0.2,
+          ease: "power2.inOut"
+        }
+      );
 
     }, containerRef);
 
@@ -77,7 +86,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <div ref={containerRef} className="py-16 bg-[#020617] overflow-hidden">
+    <div ref={containerRef} className="py-16 bg-bg-primary overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 section-header">
           <h2 className="text-4xl font-bold mb-4 text-white">How It Works</h2>
@@ -106,7 +115,7 @@ const HowItWorks = () => {
               {/* Arrow connector */}
               {index < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10 step-arrow">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-[#FC1E5C] to-transparent"></div>
+                  <div className="w-8 h-0.5 bg-linear-to-r from-[#FC1E5C] to-transparent"></div>
                 </div>
               )}
             </div>
